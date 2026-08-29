@@ -36,3 +36,6 @@ coverage/
 
 # opendesign build output
 opendesign/
+
+# uploaded media (user content)
+public/uploads/
