@@ -1,0 +1,92 @@
+import { type NextRequest, NextResponse } from 'next/server';
+import { writeFile, mkdir } from 'fs/promises';
+import path from 'path';
+import { v4 as uuidv4 } from 'uuid';
+import { connectDB } from '@/lib/db';
+import { Media } from '@/lib/models';
+import { decrypt } from '@/lib/session';
+import { auditLog } from '@/lib/audit';
+
+const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads');
+const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
+const ALLOWED_TYPES = new Set([
+  'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/avif',
+  'video/mp4', 'video/webm',
+  'application/pdf',
+]);
+
+export async function POST(request: NextRequest) {
+  // Origin check to prevent CSRF
+  const origin = request.headers.get('origin');
+  if (origin) {
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? `http://${request.headers.get('host') ?? 'localhost:3000'}`;
+    let allowedHost: string;
+    try {
+      allowedHost = new URL(appUrl).host;
+    } catch {
+      allowedHost = '';
+    }
+    if (allowedHost && origin && new URL(origin).host !== allowedHost) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+  }
+
+  // Auth check
+  const token = request.cookies.get('admin_session')?.value;
+  if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const session = await decrypt(token);
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  let formData: FormData;
+  try {
+    formData = await request.formData();
+  } catch {
+    return NextResponse.json({ error: 'Invalid form data' }, { status: 400 });
+  }
+
+  const file = formData.get('file');
+  if (!(file instanceof File)) {
+    return NextResponse.json({ error: 'No file provided' }, { status: 400 });
+  }
+
+  if (!ALLOWED_TYPES.has(file.type)) {
+    return NextResponse.json({ error: 'File type not allowed' }, { status: 400 });
+  }
+
+  if (file.size > MAX_SIZE) {
+    return NextResponse.json({ error: 'File exceeds 10 MB limit' }, { status: 400 });
+  }
+
+  const ext = file.name.split('.').pop()?.toLowerCase() ?? 'bin';
+  const filename = `${uuidv4()}.${ext}`;
+  const uploadPath = path.join(UPLOAD_DIR, filename);
+
+  try {
+    await mkdir(UPLOAD_DIR, { recursive: true });
+    const buffer = Buffer.from(await file.arrayBuffer());
+    await writeFile(uploadPath, buffer);
+  } catch {
+    return NextResponse.json({ error: 'Failed to save file' }, { status: 500 });
+  }
+
+  const url = `/uploads/${filename}`;
+  const mediaType = file.type.startsWith('image/') ? 'image' : file.type.startsWith('video/') ? 'video' : 'document';
+
+  try {
+    await connectDB();
+    const media = await Media.create({
+      filename,
+      originalName: file.name,
+      mimeType: file.type,
+      size: file.size,
+      url,
+      type: mediaType,
+    });
+
+    await auditLog({ action: 'UPLOAD', resource: 'media', resourceId: media._id.toString(), details: file.name });
+
+    return NextResponse.json({ media: JSON.parse(JSON.stringify(media)) });
+  } catch {
+    return NextResponse.json({ error: 'Database error' }, { status: 500 });
+  }
+}

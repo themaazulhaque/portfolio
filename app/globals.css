@@ -1,0 +1,289 @@
+@import "tailwindcss";
+@import "./sections.css";
+@import "./case-study.css";
+
+
+:root {
+  color-scheme: dark;
+  --bg-color: #070709;
+  --fg-color: #f4f4f6;
+  --accent-glow: rgba(255, 255, 255, 0.05);
+
+  /* ---------- MAAZUL EDITORIAL · design tokens ---------- */
+  --black-1: #070709;
+  --black-2: #0b0b0e;
+  --black-3: #101014;
+  --ink-warm: #16151a;
+  --white-1: #f4f4f6;
+  --white-2: rgba(244, 244, 246, 0.6);
+  --white-3: rgba(255, 255, 255, 0.5);
+  --white-4: rgba(255, 255, 255, 0.18);
+  --warm-grey: #a5a29b;
+  --warm-white: #e8e5df;
+  --hairline-1: rgba(255, 255, 255, 0.08);
+  --hairline-2: rgba(255, 255, 255, 0.15);
+  --hairline-3: rgba(255, 255, 255, 0.32);
+  --glow-soft: rgba(255, 255, 255, 0.05);
+  --glow-strong: rgba(255, 255, 255, 0.08);
+
+  --bg-1: var(--black-1);
+  --bg-2: var(--black-2);
+  --bg-3: var(--black-3);
+  --surface-primary: var(--black-2);
+  --surface-card: var(--black-3);
+  --fg-1: var(--white-1);
+  --fg-2: var(--white-2);
+  --fg-3: var(--white-3);
+  --fg-warm: var(--warm-grey);
+  --accent-1: #ffffff;
+  --border-subtle: var(--hairline-1);
+  --border-visible: var(--hairline-2);
+  --border-strong: var(--hairline-3);
+
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Cinzel', 'Times New Roman', serif;
+  --font-ui: 'Geist', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  --w-thin: 100;
+  --w-light: 200;
+  --w-regular: 300;
+  --w-medium: 500;
+
+  --text-hero: clamp(2.5rem, 8vw, 8.5rem);
+  --text-hero-2: clamp(2rem, 6.5vw, 6.5rem);
+  --text-display: clamp(3rem, 10vw, 12rem);
+  --text-h1: clamp(2.2rem, 5.5vw, 5.5rem);
+  --text-h2: clamp(1.5rem, 3.2vw, 3rem);
+  --text-h3: clamp(1.1rem, 1.8vw, 1.6rem);
+  --text-body: clamp(1rem, 1.2vw, 1.15rem);
+  --text-label: clamp(0.7rem, 1vw, 0.85rem);
+  --text-tag: clamp(0.62rem, 0.9vw, 0.75rem);
+  --text-nav: clamp(0.7rem, 0.9vw, 0.85rem);
+  --text-ui-label: clamp(0.74rem, 0.95vw, 0.84rem);
+  --text-ui-small: clamp(0.7rem, 0.85vw, 0.78rem);
+  --text-ui-body: clamp(0.95rem, 1.1vw, 1.08rem);
+
+  --track-masthead: 0.06em;
+  --track-title: 0.28em;
+  --track-subtitle: 0.45em;
+  --track-tag: 0.5em;
+  --track-nav: 0.35em;
+  --track-label: 0.4em;
+  --track-ui: 0.08em;
+  --track-ui-wide: 0.2em;
+  --leading-tight: 0.95;
+  --leading-body: 1.7;
+
+  --sp-1: 0.5rem;
+  --sp-2: 1rem;
+  --sp-3: 2rem;
+  --sp-4: 3.5rem;
+  --sp-5: 6rem;
+  --sp-6: 10rem;
+  --sp-section: clamp(3.5rem, 8vw, 6.5rem);
+  --gutter: clamp(1.5rem, 5vw, 5.5rem);
+
+  --radius-pill: 9999px;
+  --radius-card: 4px;
+  --radius-soft: 8px;
+
+  --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-fast: 0.4s;
+  --dur-med: 0.8s;
+  --dur-slow: 1.4s;
+
+  --grain-opacity: 0.045;
+  --glow-ambient: radial-gradient(circle at 50% 30%, rgba(20, 20, 28, 0.6) 0%, rgba(7, 7, 9, 1) 70%);
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  background-color: var(--bg-color);
+  color: var(--fg-color);
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+/* Base Stage and Viewport */
+.hero-stage {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  background-color: var(--bg-color);
+  overflow: hidden;
+}
+
+.hero-viewport {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  isolation: isolate;
+  background: radial-gradient(circle at 50% 30%, rgba(20, 20, 28, 0.6) 0%, rgba(7, 7, 9, 1) 70%);
+}
+
+/* Dynamic Canvas */
+.hero-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+  object-fit: cover;
+}
+
+/* Atmospheric Lighting & Vignette */
+.hero-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: 
+    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(255, 255, 255, 0.04), transparent 70%),
+    radial-gradient(ellipse 60% 50% at 50% 110%, rgba(0, 0, 0, 0.8), transparent 70%),
+    linear-gradient(180deg, rgba(7,7,9,0.4) 0%, rgba(7,7,9,0.1) 40%, rgba(7,7,9,0.8) 100%);
+}
+
+.hero-vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  background: radial-gradient(circle at center, transparent 35%, rgba(4, 4, 6, 0.5) 75%, rgba(2, 2, 3, 0.92) 100%);
+  mix-blend-mode: multiply;
+}
+
+/* Film Grain Simulation */
+.hero-grain {
+  position: absolute;
+  inset: -50%;
+  z-index: 5;
+  pointer-events: none;
+  opacity: 0.045;
+  mix-blend-mode: overlay;
+  background-image: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.8) 0.5px, transparent 1px);
+  background-size: 3px 3px;
+  animation: grain-shift 8s steps(10) infinite;
+}
+
+@keyframes grain-shift {
+  0% { transform: translate(0, 0); }
+  10% { transform: translate(-2%, -3%); }
+  20% { transform: translate(-4%, 2%); }
+  30% { transform: translate(3%, -2%); }
+  40% { transform: translate(-2%, 4%); }
+  50% { transform: translate(4%, -3%); }
+  60% { transform: translate(-3%, 2%); }
+  70% { transform: translate(2%, 4%); }
+  80% { transform: translate(-4%, -2%); }
+  90% { transform: translate(3%, 3%); }
+  100% { transform: translate(0, 0); }
+}
+
+/* Typography Container & Phases */
+.hero-typography {
+  position: absolute;
+  inset: 0;
+  z-index: 1; /* Rendered behind subject/canvas layer (canvas is z-index 2 with blend modes or subtle transparency) */
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Shared Phase Styling */
+.hero-phase {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 2rem;
+  will-change: transform, opacity, filter;
+  transition: opacity 0.1s linear, transform 0.1s linear, filter 0.1s linear;
+}
+
+/* Main Display Typography */
+.text-ultra-thin {
+  font-weight: 100;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+}
+
+.text-editorial-title {
+  font-size: clamp(2.5rem, 8vw, 8.5rem);
+  font-weight: 100;
+  letter-spacing: 0.28em;
+  line-height: 0.95;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.92);
+  text-shadow: 0 0 40px rgba(255, 255, 255, 0.08);
+}
+
+.text-editorial-subtitle {
+  font-size: clamp(0.75rem, 1.8vw, 1.4rem);
+  font-weight: 200;
+  letter-spacing: 0.45em;
+  text-transform: uppercase;
+  color: rgba(244, 244, 246, 0.6);
+  margin-top: 1rem;
+}
+
+.text-editorial-tag {
+  font-size: clamp(0.65rem, 1vw, 0.85rem);
+  font-weight: 300;
+  letter-spacing: 0.5em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+  margin-bottom: 1.5rem;
+}
+
+.text-porsche-hero {
+  font-size: clamp(2rem, 6.5vw, 6.5rem);
+  font-weight: 100;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  background: linear-gradient(180deg, #ffffff 0%, rgba(200, 200, 210, 0.4) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.hero-pills {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(1rem, 3vw, 3rem);
+  margin-top: 2rem;
+}
+
+.hero-pill {
+  font-size: clamp(0.7rem, 1.5vw, 1.1rem);
+  font-weight: 200;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
+  padding: 0.4rem 1.2rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(8px);
+}
+
+
