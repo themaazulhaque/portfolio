@@ -39,3 +39,6 @@ opendesign/
 
 # uploaded media (user content)
 public/uploads/
+
+# Local Netlify folder
+.netlify
