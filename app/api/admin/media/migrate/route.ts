@@ -6,6 +6,7 @@ import { Project, SiteSettings, Media, Review } from '@/lib/models';
 import { decrypt } from '@/lib/session';
 import { auditLog } from '@/lib/audit';
 import { isCloudinaryConfigured, uploadToCloudinary } from '@/lib/cloudinary';
+import { isValidOrigin } from '@/lib/csrf';
 
 function isLocalUrl(url: string): boolean {
   if (!url) return false;
@@ -26,14 +27,8 @@ interface MigrationEntry {
 
 export async function POST(request: NextRequest) {
   // Origin check
-  const origin = request.headers.get('origin');
-  if (origin) {
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? `http://${request.headers.get('host') ?? 'localhost:3000'}`;
-    let allowedHost: string;
-    try { allowedHost = new URL(appUrl).host; } catch { allowedHost = ''; }
-    if (allowedHost && origin && new URL(origin).host !== allowedHost) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
+  if (!isValidOrigin(request)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   // Auth

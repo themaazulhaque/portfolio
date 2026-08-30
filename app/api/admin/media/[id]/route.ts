@@ -6,23 +6,14 @@ import { Media } from '@/lib/models';
 import { decrypt } from '@/lib/session';
 import { auditLog } from '@/lib/audit';
 import { isCloudinaryUrl, extractCloudinaryPublicId, deleteFromCloudinary } from '@/lib/cloudinary';
+import { isValidOrigin } from '@/lib/csrf';
 
 interface Params { params: Promise<{ id: string }> }
 
 export async function DELETE(request: NextRequest, { params }: Params) {
   // Origin check to prevent CSRF
-  const origin = request.headers.get('origin');
-  if (origin) {
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? `http://${request.headers.get('host') ?? 'localhost:3000'}`;
-    let allowedHost: string;
-    try {
-      allowedHost = new URL(appUrl).host;
-    } catch {
-      allowedHost = '';
-    }
-    if (allowedHost && origin && new URL(origin).host !== allowedHost) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
+  if (!isValidOrigin(request)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   const token = request.cookies.get('admin_session')?.value;

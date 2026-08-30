@@ -3,6 +3,7 @@ import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { isCloudinaryConfigured, uploadToCloudinary } from '@/lib/cloudinary';
+import { isValidOrigin } from '@/lib/csrf';
 
 const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads', 'reviews');
 const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
@@ -30,18 +31,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
   }
 
-  const origin = request.headers.get('origin');
-  if (origin) {
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? `http://${request.headers.get('host') ?? 'localhost:3000'}`;
-    let allowedHost: string;
-    try {
-      allowedHost = new URL(appUrl).host;
-    } catch {
-      allowedHost = '';
-    }
-    if (allowedHost && origin && new URL(origin).host !== allowedHost) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
+  if (!isValidOrigin(request)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   let formData: FormData;

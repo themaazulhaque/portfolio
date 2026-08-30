@@ -7,6 +7,7 @@ import { Media } from '@/lib/models';
 import { decrypt } from '@/lib/session';
 import { auditLog } from '@/lib/audit';
 import { isCloudinaryConfigured, uploadToCloudinary } from '@/lib/cloudinary';
+import { isValidOrigin } from '@/lib/csrf';
 
 const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads');
 const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
@@ -18,18 +19,8 @@ const ALLOWED_TYPES = new Set([
 
 export async function POST(request: NextRequest) {
   // Origin check to prevent CSRF
-  const origin = request.headers.get('origin');
-  if (origin) {
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? `http://${request.headers.get('host') ?? 'localhost:3000'}`;
-    let allowedHost: string;
-    try {
-      allowedHost = new URL(appUrl).host;
-    } catch {
-      allowedHost = '';
-    }
-    if (allowedHost && origin && new URL(origin).host !== allowedHost) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
+  if (!isValidOrigin(request)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   // Auth check
