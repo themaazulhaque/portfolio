@@ -6,6 +6,7 @@ import { connectDB } from '@/lib/db';
 import { Media } from '@/lib/models';
 import { decrypt } from '@/lib/session';
 import { auditLog } from '@/lib/audit';
+import { isCloudinaryConfigured, uploadToCloudinary } from '@/lib/cloudinary';
 
 const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads');
 const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
@@ -57,19 +58,40 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'File exceeds 10 MB limit' }, { status: 400 });
   }
 
-  const ext = file.name.split('.').pop()?.toLowerCase() ?? 'bin';
-  const filename = `${uuidv4()}.${ext}`;
-  const uploadPath = path.join(UPLOAD_DIR, filename);
+  const buffer = Buffer.from(await file.arrayBuffer());
+  let url: string;
+  let filename: string;
 
-  try {
-    await mkdir(UPLOAD_DIR, { recursive: true });
-    const buffer = Buffer.from(await file.arrayBuffer());
-    await writeFile(uploadPath, buffer);
-  } catch {
-    return NextResponse.json({ error: 'Failed to save file' }, { status: 500 });
+  if (isCloudinaryConfigured()) {
+    try {
+      const resourceType = file.type.startsWith('image/') ? 'image'
+        : file.type.startsWith('video/') ? 'video'
+        : 'raw';
+      const result = await uploadToCloudinary(buffer, {
+        folder: 'portfolio/media',
+        resource_type: resourceType,
+      });
+      url = result.secure_url;
+      filename = result.public_id;
+    } catch {
+      return NextResponse.json({ error: 'Cloudinary upload failed' }, { status: 500 });
+    }
+  } else if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: 'Cloudinary production storage is not configured. Contact the administrator.' }, { status: 500 });
+  } else {
+    // Fallback to local filesystem for development only
+    const ext = file.name.split('.').pop()?.toLowerCase() ?? 'bin';
+    filename = `${uuidv4()}.${ext}`;
+    const uploadPath = path.join(UPLOAD_DIR, filename);
+    try {
+      await mkdir(UPLOAD_DIR, { recursive: true });
+      await writeFile(uploadPath, buffer);
+    } catch {
+      return NextResponse.json({ error: 'Failed to save file' }, { status: 500 });
+    }
+    url = `/uploads/${filename}`;
   }
 
-  const url = `/uploads/${filename}`;
   const mediaType = file.type.startsWith('image/') ? 'image' : file.type.startsWith('video/') ? 'video' : 'document';
 
   try {

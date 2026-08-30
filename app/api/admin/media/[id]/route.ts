@@ -5,6 +5,7 @@ import { connectDB } from '@/lib/db';
 import { Media } from '@/lib/models';
 import { decrypt } from '@/lib/session';
 import { auditLog } from '@/lib/audit';
+import { isCloudinaryUrl, extractCloudinaryPublicId, deleteFromCloudinary } from '@/lib/cloudinary';
 
 interface Params { params: Promise<{ id: string }> }
 
@@ -19,7 +20,7 @@ export async function DELETE(request: NextRequest, { params }: Params) {
     } catch {
       allowedHost = '';
     }
-    if (allowedHost && new URL(origin).host !== allowedHost) {
+    if (allowedHost && origin && new URL(origin).host !== allowedHost) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
   }
@@ -36,11 +37,23 @@ export async function DELETE(request: NextRequest, { params }: Params) {
     const media = await Media.findById(id);
     if (!media) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-    const filePath = path.join(process.cwd(), 'public', media.url);
-    try {
-      await unlink(filePath);
-    } catch {
-      // File may already be gone — continue
+    if (isCloudinaryUrl(media.url)) {
+      const publicId = extractCloudinaryPublicId(media.url);
+      if (publicId) {
+        try {
+          await deleteFromCloudinary(publicId);
+        } catch {
+          // Cloudinary deletion failed — continue to remove DB record
+        }
+      }
+    } else {
+      // Legacy local file
+      const filePath = path.join(process.cwd(), 'public', media.url);
+      try {
+        await unlink(filePath);
+      } catch {
+        // File may already be gone — continue
+      }
     }
 
     await Media.findByIdAndDelete(id);

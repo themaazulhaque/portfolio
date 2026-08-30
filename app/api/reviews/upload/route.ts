@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
+import { isCloudinaryConfigured, uploadToCloudinary } from '@/lib/cloudinary';
 
 const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads', 'reviews');
 const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
@@ -38,7 +39,7 @@ export async function POST(request: NextRequest) {
     } catch {
       allowedHost = '';
     }
-    if (allowedHost && new URL(origin).host !== allowedHost) {
+    if (allowedHost && origin && new URL(origin).host !== allowedHost) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
   }
@@ -63,18 +64,34 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'File exceeds 10 MB limit.' }, { status: 400 });
   }
 
-  const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg';
-  const filename = `${uuidv4()}.${ext}`;
-  const uploadPath = path.join(UPLOAD_DIR, filename);
+  const buffer = Buffer.from(await file.arrayBuffer());
+  let url: string;
 
-  try {
-    await mkdir(UPLOAD_DIR, { recursive: true });
-    const buffer = Buffer.from(await file.arrayBuffer());
-    await writeFile(uploadPath, buffer);
-  } catch {
-    return NextResponse.json({ error: 'Failed to save file.' }, { status: 500 });
+  if (isCloudinaryConfigured()) {
+    try {
+      const result = await uploadToCloudinary(buffer, {
+        folder: 'portfolio/reviews',
+        resource_type: 'image',
+      });
+      url = result.secure_url;
+    } catch {
+      return NextResponse.json({ error: 'Cloudinary upload failed.' }, { status: 500 });
+    }
+  } else if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: 'Cloudinary production storage is not configured. Contact the administrator.' }, { status: 500 });
+  } else {
+    // Local fallback for development only
+    const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg';
+    const filename = `${uuidv4()}.${ext}`;
+    const uploadPath = path.join(UPLOAD_DIR, filename);
+    try {
+      await mkdir(UPLOAD_DIR, { recursive: true });
+      await writeFile(uploadPath, buffer);
+    } catch {
+      return NextResponse.json({ error: 'Failed to save file.' }, { status: 500 });
+    }
+    url = `/uploads/reviews/${filename}`;
   }
 
-  const url = `/uploads/reviews/${filename}`;
   return NextResponse.json({ url });
 }

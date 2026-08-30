@@ -23,8 +23,18 @@ function checkRateLimit(ip: string): boolean {
 
 function isSafeImagePath(value: unknown): value is string {
   if (typeof value !== 'string' || !value) return false;
-  if (!value.startsWith('/uploads/reviews/')) return false;
   if (value.includes('..') || value.includes('\0')) return false;
+  // Accept Cloudinary HTTPS URLs
+  try {
+    const parsed = new URL(value);
+    if (parsed.hostname.endsWith('cloudinary.com')) {
+      return true;
+    }
+  } catch {
+    // Not a full URL, check local path
+  }
+  // Accept local /uploads/reviews/ paths (legacy)
+  if (!value.startsWith('/uploads/reviews/')) return false;
   const ext = value.split('.').pop()?.toLowerCase();
   if (!ext || !['jpg', 'jpeg', 'png', 'webp'].includes(ext)) return false;
   return true;
