@@ -291,6 +291,7 @@ export interface ISiteSettings {
   ogImageUrl?: string;
   faviconUrl?: string;
   aboutPortrait?: string;
+  testimonialVideo?: string;
   updatedAt: Date;
 }
 
@@ -308,6 +309,7 @@ const SiteSettingsSchema = new Schema<ISiteSettings>(
     ogImageUrl: { type: String },
     faviconUrl: { type: String },
     aboutPortrait: { type: String, default: '' },
+    testimonialVideo: { type: String, default: '' },
   },
   { timestamps: true }
 );

@@ -125,7 +125,7 @@ export function ContactSection({ settings, socialLinks }: ContactSectionProps) {
           <div className="contact-left">
             <h2 className="contact-headline" data-reveal>
               Let&apos;s build something{" "}
-              <em className="serif-accent serif-accent--lg">exceptional</em>.
+              <em className="serif-accent serif-accent--lg">extraordinary</em>.
             </h2>
 
             <form className="contact-form" id="contactForm" noValidate action={action}>

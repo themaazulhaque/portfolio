@@ -59,7 +59,7 @@ export function ImageSequenceHero({
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  const displayName = (name || "Maazul Haque").toUpperCase();
+  const displayName = name || "Maazul Haque";
   const subtitle = (title || "Software Engineer").toUpperCase();
   const availabilityTag = availabilityLabel(availability || "available").toUpperCase();
 
@@ -341,7 +341,7 @@ export function ImageSequenceHero({
             {/* Phase 1: Main Name & Primary Title */}
             <div className="hero-phase" style={phase1Style}>
               <span className="text-editorial-tag">HELLO.</span>
-              <h1 className="text-editorial-title">{displayName}</h1>
+              <h1 className="text-editorial-title text-signature">{displayName}</h1>
               <p className="text-editorial-subtitle">{subtitle}</p>
             </div>
 
@@ -365,7 +365,7 @@ export function ImageSequenceHero({
             {/* Phase 4: Availability & Conclusion */}
             <div className="hero-phase" style={phase4Style}>
               <span className="text-editorial-tag">{availabilityTag}</span>
-              <h2 className="text-editorial-title">{displayName}</h2>
+              <h2 className="text-editorial-title text-signature">{displayName}</h2>
               <p className="text-editorial-subtitle">SOFTWARE & AI ENGINEER</p>
             </div>
           </div>

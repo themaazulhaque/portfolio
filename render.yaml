@@ -1,0 +1,53 @@
+services:
+  - type: web
+    name: portfolio
+    runtime: node
+    plan: starter
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: NEXT_PUBLIC_APP_URL
+        fromService:
+          name: portfolio
+          type: web
+          property: url
+      - key: WS_PATH
+        value: /ws
+      - key: NEXT_PUBLIC_WS_URL
+        fromService:
+          name: portfolio
+          type: web
+          property: url
+        prepend: wss://
+        append: /ws
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        value: onboarding@resend.dev
+      - key: EMAIL_FROM_NAME
+        value: Maazul
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: VAPID_PUBLIC_KEY
+        sync: false
+      - key: VAPID_PRIVATE_KEY
+        sync: false
+      - key: VAPID_SUBJECT
+        value: mailto:admin@portfolio.dev
+      - key: NEXT_PUBLIC_VAPID_PUBLIC_KEY
+        sync: false

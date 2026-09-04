@@ -27,7 +27,7 @@ export async function connectDB(): Promise<typeof mongoose> {
   }
 
   // This instance is already connected (or connecting) — nothing to do.
-  if (mongoose.connection.readyState === 1 || mongoose.connection.readyState === 2) {
+  if (mongoose.connection.readyState === 1) {
     return mongoose;
   }
 
@@ -35,6 +35,12 @@ export async function connectDB(): Promise<typeof mongoose> {
   if (cached.promise && cached.conn !== mongoose) {
     cached.promise = null;
     cached.conn = null;
+  }
+
+  // Wait for the shared connection before running concurrent queries.
+  if (mongoose.connection.readyState === 2 && cached.promise) {
+    cached.conn = await cached.promise;
+    return mongoose;
   }
 
   if (!cached.promise) {

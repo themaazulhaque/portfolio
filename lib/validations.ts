@@ -221,6 +221,7 @@ export const SiteSettingsSchema = z.object({
   ogImageUrl: z.string().optional(),
   faviconUrl: z.string().optional(),
   aboutPortrait: z.string().optional().or(z.literal('')),
+  testimonialVideo: z.string().optional().or(z.literal('')),
 });
 export type SiteSettingsInput = z.infer<typeof SiteSettingsSchema>;
 

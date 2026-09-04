@@ -47,7 +47,7 @@ export default async function Page() {
         <ExperienceSection experiences={experiences} />
         <StackSection tech={tech} />
         <ServicesSection services={services} />
-        <ReviewsSection reviews={reviews} />
+        <ReviewsSection reviews={reviews} testimonialVideo={settings.testimonialVideo} />
         <ContactSection settings={settings} socialLinks={socialLinks} />
       </main>
       <FooterSection settings={settings} socialLinks={socialLinks} />

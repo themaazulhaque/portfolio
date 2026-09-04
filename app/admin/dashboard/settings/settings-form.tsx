@@ -9,7 +9,7 @@ interface ISiteSettings {
   name?: string; title?: string; email?: string; phone?: string;
   location?: string; availability?: string; resumeUrl?: string;
   seoTitle?: string; seoDescription?: string; ogImageUrl?: string;
-  faviconUrl?: string; aboutPortrait?: string;
+  faviconUrl?: string; aboutPortrait?: string; testimonialVideo?: string;
 }
 interface ISocialLink { _id: string; platform: string; url: string; order: number; visible: boolean; }
 interface Props { settings?: ISiteSettings | null; socialLinks: ISocialLink[]; }
@@ -103,6 +103,7 @@ export function SettingsForm({ settings, socialLinks: initialLinks }: Props) {
               <MediaPicker name="faviconUrl" label="Favicon" value={settings?.faviconUrl} accept="image/*" hint="Site favicon icon" />
             </div>
             <MediaPicker name="aboutPortrait" label="About Portrait" value={settings?.aboutPortrait} accept="image/*" hint="Portrait photo for the About section" />
+            <MediaPicker name="testimonialVideo" label="Testimonial Video" value={settings?.testimonialVideo} accept="video/mp4,video/webm" hint="Video for the testimonials section (square format preferred)" />
           </div>
         </div>
 

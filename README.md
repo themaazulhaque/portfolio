@@ -64,9 +64,8 @@ npm run start
 | `NEXT_PUBLIC_APP_URL` | Public app URL |
 | `VAPID_PUBLIC_KEY` | Web push public key |
 | `VAPID_PRIVATE_KEY` | Web push private key (server only) |
-| `SMTP_HOST` | SMTP server host |
-| `SMTP_USER` | SMTP username |
-| `SMTP_PASSWORD` | SMTP password |
+| `RESEND_API_KEY` | Resend API key for transactional emails |
+| `EMAIL_FROM` | Sender email address (must be on a verified Resend domain for production) |
 
 ## Scripts
 

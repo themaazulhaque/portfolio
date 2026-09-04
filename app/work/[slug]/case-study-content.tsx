@@ -400,7 +400,7 @@ export default function CaseStudyContent({
 
       <footer className="case-footer">
         <div className="container case-footer-inner">
-          <span>Copyright {new Date().getFullYear()} {settings.name || "Maazul Haque"}</span>
+          <span>Copyright {new Date().getFullYear()} <span className="text-signature">{settings.name || "Maazul Haque"}</span></span>
           <Link href="/#projects" className="case-back-top">
             Back to Portfolio
           </Link>

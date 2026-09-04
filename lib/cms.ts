@@ -43,6 +43,7 @@ export const DEFAULT_SETTINGS: PublicSettings = {
   ogImageUrl: '',
   faviconUrl: '',
   aboutPortrait: '',
+  testimonialVideo: '',
 };
 
 function padNum(index: number): string {

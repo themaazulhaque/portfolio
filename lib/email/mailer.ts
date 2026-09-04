@@ -1,36 +1,24 @@
-import nodemailer from "nodemailer";
-import type { Transporter } from "nodemailer";
+import { Resend } from "resend";
 
-const SMTP_HOST = process.env.SMTP_HOST || "";
-const SMTP_PORT = parseInt(process.env.SMTP_PORT || "587", 10);
-const SMTP_SECURE = process.env.SMTP_SECURE === "true";
-const SMTP_USER = process.env.SMTP_USER || "";
-const SMTP_PASSWORD = process.env.SMTP_PASSWORD || "";
+const RESEND_API_KEY = process.env.RESEND_API_KEY || "";
 const EMAIL_FROM = process.env.EMAIL_FROM || "noreply@localhost";
 const EMAIL_FROM_NAME = process.env.EMAIL_FROM_NAME || "Maazul";
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "";
 
-let transporter: Transporter | null = null;
-let configValid = false;
+let resendClient: Resend | null = null;
 
-function ensureTransporter(): Transporter | null {
-  if (transporter) return transporter;
-  if (!SMTP_HOST) {
-    console.warn("[email] SMTP_HOST not configured — emails will not be sent");
+function ensureClient(): Resend | null {
+  if (resendClient) return resendClient;
+  if (!RESEND_API_KEY) {
+    console.warn("[email] RESEND_API_KEY not configured — emails will not be sent");
     return null;
   }
-  transporter = nodemailer.createTransport({
-    host: SMTP_HOST,
-    port: SMTP_PORT,
-    secure: SMTP_SECURE,
-    auth: SMTP_USER ? { user: SMTP_USER, pass: SMTP_PASSWORD } : undefined,
-  });
-  configValid = true;
-  return transporter;
+  resendClient = new Resend(RESEND_API_KEY);
+  return resendClient;
 }
 
 export function isEmailConfigured(): boolean {
-  return !!SMTP_HOST && !!ADMIN_EMAIL;
+  return !!RESEND_API_KEY && !!ADMIN_EMAIL;
 }
 
 function fromAddress(): string {
@@ -57,14 +45,14 @@ async function sendEmail(options: {
   text: string;
   replyTo?: string;
 }): Promise<EmailResult> {
-  const transport = ensureTransporter();
-  if (!transport) {
-    console.warn("[email] SMTP not configured — skipping email");
+  const client = ensureClient();
+  if (!client) {
+    console.warn("[email] Resend not configured — skipping email");
     return { success: false, error: "Email not configured" };
   }
 
   try {
-    await transport.sendMail({
+    await client.emails.send({
       from: fromAddress(),
       to: escapeHeader(options.to),
       subject: escapeHeader(options.subject),

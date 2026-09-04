@@ -139,7 +139,8 @@ export function AboutSection({ name, location, availability, portrait }: AboutSe
           <div className="about-body">
             <p className="statement" data-lines>
               {firstName} is a software and AI engineer who{" "}
-              <em className="serif-accent">designs, builds, and ships</em>.
+              <em className="serif-accent">designs, builds, and ships</em> products
+              that move fast and feel quiet.
             </p>
             <p className="about-paragraph" data-lines>
               He works where interface meets intelligence — turning ideas into fast, precise, quiet

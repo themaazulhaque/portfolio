@@ -50,6 +50,7 @@ export async function updateSiteSettings(
     ogImageUrl: (formData.get('ogImageUrl') as string) || undefined,
     faviconUrl: (formData.get('faviconUrl') as string) || undefined,
     aboutPortrait: (formData.get('aboutPortrait') as string) || undefined,
+    testimonialVideo: (formData.get('testimonialVideo') as string) || undefined,
   };
   const parsed = SiteSettingsSchema.safeParse(raw);
   if (!parsed.success) return { error: getValidationErrorMessage(parsed.error) };

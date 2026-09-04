@@ -30,7 +30,7 @@ interface SiteNavProps {
  * Persistent minimal top bar + ambient film grain + custom cursor + Fullscreen GSAP Nav Overlay.
  */
 export function SiteNav({ name, email, availability }: SiteNavProps) {
-  const brand = (name || "Maazul Haque").split(" ")[0].toUpperCase();
+  const brand = (name || "Maazul Haque").split(" ")[0];
   const contactEmail = email || "hello@maazul.dev";
   const statusLabel = availabilityLabel(availability || "available");
   const topbarRef = useRef<HTMLElement | null>(null);

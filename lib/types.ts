@@ -156,6 +156,7 @@ export interface PublicSettings {
   ogImageUrl: string;
   faviconUrl: string;
   aboutPortrait: string;
+  testimonialVideo: string;
 }
 
 // ==========================================
