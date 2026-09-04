@@ -29,6 +29,15 @@ function escapeHeader(value: string): string {
   return value.replace(/[\r\n]/g, " ").trim();
 }
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 function validateEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
@@ -238,7 +247,7 @@ export async function sendContactNotification(data: {
     return { success: false, error: "ADMIN_EMAIL not configured" };
   }
 
-  const subject = `New Contact Form Submission — ${data.subject}`;
+  const subjectLine = data.subject ? `New Contact Form Submission — ${data.subject}` : "New Contact Form Submission";
   const html = emailWrapper(`
     ${emailHeader()}
     ${emailHeading("New contact form submission")}
@@ -247,21 +256,21 @@ export async function sendContactNotification(data: {
     <tr>
       <td>
         <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-          ${infoRow("Name", data.name)}
-          ${infoRow("Email", `<a href="mailto:${data.email}" style="color:${S.ink};text-decoration:none;">${data.email}</a>`)}
-          ${infoRow("Subject", data.subject)}
+          ${infoRow("Name", escapeHtml(data.name))}
+          ${infoRow("Email", `<a href="mailto:${escapeHtml(data.email)}" style="color:${S.ink};text-decoration:none;">${escapeHtml(data.email)}</a>`)}
+          ${infoRow("Subject", data.subject ? escapeHtml(data.subject) : "<em>No subject</em>")}
         </table>
       </td>
     </tr>
-    ${contentCard(data.message)}
+    ${contentCard(escapeHtml(data.message))}
     ${emailFooter()}
   `);
 
-  const text = `New contact form submission\n\nName: ${data.name}\nEmail: ${data.email}\nSubject: ${data.subject}\n\nMessage:\n${data.message}`;
+  const text = `New contact form submission\n\nName: ${data.name}\nEmail: ${data.email}\nSubject: ${data.subject || "No subject"}\n\nMessage:\n${data.message}`;
 
   const result = await sendEmail({
     to: ADMIN_EMAIL,
-    subject,
+    subject: subjectLine,
     html,
     text,
     replyTo: data.email,
@@ -279,7 +288,7 @@ export async function sendContactAcknowledgement(data: {
   const subject = "Thanks for reaching out — Maazul";
   const html = emailWrapper(`
     ${emailHeader()}
-    ${emailHeading(`Thanks for reaching out, ${data.name}.`)}
+    ${emailHeading(`Thanks for reaching out, ${escapeHtml(data.name)}.`)}
     ${emailSubheading("Your message has been received. I will review it and get back to you as soon as possible.")}
     ${divider()}
     <tr>
@@ -287,14 +296,14 @@ export async function sendContactAcknowledgement(data: {
         <span style="${emailLabel('Your Message')}">Your Message</span>
       </td>
     </tr>
-    ${contentCard(data.message)}
+    ${contentCard(escapeHtml(data.message))}
     ${emailSubheading("I appreciate your interest and will be in touch shortly.")}
     ${emailFooter()}
   `);
 
   const text = `Hi ${data.name},\n\nThanks for reaching out. Your message has been received. I will review it and get back to you as soon as possible.\n\nYour message:\n${data.message}\n\nI appreciate your interest and will be in touch shortly.\n\nBest,\nMaazul`;
 
-  const result = await sendEmail({ to: data.email, subject, html, text });
+  const result = await sendEmail({ to: data.email, subject, html, text, replyTo: ADMIN_EMAIL });
   if (result.success) console.log("[email] Contact acknowledgement sent");
   return result;
 }
@@ -308,7 +317,7 @@ export async function sendReviewThankYou(data: {
   const subject = "Thanks for your review — Maazul";
   const html = emailWrapper(`
     ${emailHeader()}
-    ${emailHeading(`Thank you, ${data.name}.`)}
+    ${emailHeading(`Thank you, ${escapeHtml(data.name)}.`)}
     ${emailSubheading("Your review has been received and is currently awaiting moderation. Once approved, it will be published on the portfolio.")}
     ${divider()}
     <tr>
@@ -337,7 +346,7 @@ export async function sendReviewThankYou(data: {
 
   const text = `Hi ${data.name},\n\nYour review has been received and is currently awaiting moderation. Once approved, it will be published on the portfolio.\n\nStatus: Awaiting Moderation\n\nI appreciate you taking the time to share your experience. Your feedback means a lot.\n\nBest,\nMaazul`;
 
-  const result = await sendEmail({ to: data.email, subject, html, text });
+  const result = await sendEmail({ to: data.email, subject, html, text, replyTo: ADMIN_EMAIL });
   if (result.success) console.log("[email] Review thank-you sent");
   return result;
 }
@@ -364,9 +373,9 @@ export async function sendNewReviewNotification(data: {
     <tr>
       <td>
         <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-          ${infoRow("Name", data.name)}
-          ${infoRow("Email", `<a href="mailto:${data.email}" style="color:${S.ink};text-decoration:none;">${data.email}</a>`)}
-          ${data.designation ? infoRow("Designation", data.designation) : ""}
+          ${infoRow("Name", escapeHtml(data.name))}
+          ${infoRow("Email", `<a href="mailto:${escapeHtml(data.email)}" style="color:${S.ink};text-decoration:none;">${escapeHtml(data.email)}</a>`)}
+          ${data.designation ? infoRow("Designation", escapeHtml(data.designation)) : ""}
           ${infoRow("Status", `<span style="display:inline-block;background-color:${S.cardBg};border:1px solid ${S.border};padding:3px 12px;font-family:${S.font};font-size:11px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:${S.ink3};">Pending</span>`)}
         </table>
       </td>
@@ -376,14 +385,14 @@ export async function sendNewReviewNotification(data: {
         <span style="${emailLabel('Review')}">Review</span>
       </td>
     </tr>
-    ${reviewCard(data.review)}
+    ${reviewCard(escapeHtml(data.review))}
     ${ctaButton(dashboardUrl, "Review & Moderate")}
     ${emailFooter()}
   `);
 
   const text = `New review received\n\nName: ${data.name}\nEmail: ${data.email}\n${data.designation ? `Designation: ${data.designation}\n` : ""}Status: Pending\n\nReview:\n${data.review}\n\nReview & Moderate: ${dashboardUrl}`;
 
-  const result = await sendEmail({ to: ADMIN_EMAIL, subject, html, text });
+  const result = await sendEmail({ to: ADMIN_EMAIL, subject, html, text, replyTo: data.email });
   if (result.success) console.log("[email] New review admin notification sent");
   return result;
 }

@@ -4,22 +4,7 @@ import { Review } from '@/lib/models';
 import { ReviewSchema } from '@/lib/validations';
 import { broadcastPushNotification } from '@/lib/notifications/push-server';
 import { sendReviewThankYou, sendNewReviewNotification } from '@/lib/email';
-
-const RATE_LIMIT_WINDOW = 60 * 1000;
-const MAX_REQUESTS_PER_WINDOW = 5;
-const requestCounts = new Map<string, { count: number; resetAt: number }>();
-
-function checkRateLimit(ip: string): boolean {
-  const now = Date.now();
-  const entry = requestCounts.get(ip);
-  if (!entry || now > entry.resetAt) {
-    requestCounts.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW });
-    return true;
-  }
-  if (entry.count >= MAX_REQUESTS_PER_WINDOW) return false;
-  entry.count++;
-  return true;
-}
+import { rateLimit } from '@/lib/rate-limit';
 
 function isSafeImagePath(value: unknown): value is string {
   if (typeof value !== 'string' || !value) return false;
@@ -42,7 +27,8 @@ function isSafeImagePath(value: unknown): value is string {
 
 export async function POST(request: NextRequest) {
   const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
-  if (!checkRateLimit(ip)) {
+  const limiter = rateLimit(`review-submit:${ip}`, { limit: 5, windowMs: 60 * 1000 });
+  if (!limiter.allowed) {
     return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
   }
 
@@ -100,7 +86,7 @@ async function triggerReviewNotifications(data: {
     tag: "new-review",
   };
 
-  await broadcastPushNotification(payload).catch(() => {});
+  await broadcastPushNotification(payload).catch((err) => console.error("[ws] Push notification failed:", err));
 
   try {
     const broadcast = globalThis.__wsBroadcastToAdmins;
@@ -121,12 +107,12 @@ async function triggerReviewNotifications(data: {
 
   // Email notifications — non-blocking
   if (data.email) {
-    sendReviewThankYou({ name: data.name, email: data.email }).catch(() => {});
+    sendReviewThankYou({ name: data.name, email: data.email }).catch((err) => console.error("[email] Review thank-you failed:", err));
   }
   sendNewReviewNotification({
     name: data.name,
     email: data.email || 'N/A',
     designation: data.designation,
     review: data.reviewText,
-  }).catch(() => {});
+  }).catch((err) => console.error("[email] Review notification failed:", err));
 }

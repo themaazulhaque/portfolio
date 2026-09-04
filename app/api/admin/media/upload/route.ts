@@ -16,6 +16,16 @@ const ALLOWED_TYPES = new Set([
   'video/mp4', 'video/webm',
   'application/pdf',
 ]);
+const SAFE_EXTENSIONS: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/gif': 'gif',
+  'image/webp': 'webp',
+  'image/avif': 'avif',
+  'video/mp4': 'mp4',
+  'video/webm': 'webm',
+  'application/pdf': 'pdf',
+};
 
 export async function POST(request: NextRequest) {
   // Origin check to prevent CSRF
@@ -71,7 +81,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Cloudinary production storage is not configured. Contact the administrator.' }, { status: 500 });
   } else {
     // Fallback to local filesystem for development only
-    const ext = file.name.split('.').pop()?.toLowerCase() ?? 'bin';
+    const ext = SAFE_EXTENSIONS[file.type] ?? 'bin';
     filename = `${uuidv4()}.${ext}`;
     const uploadPath = path.join(UPLOAD_DIR, filename);
     try {

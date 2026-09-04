@@ -102,9 +102,14 @@ export async function deleteSkill(id: string): Promise<ActionState> {
   }
 }
 
-export async function reorderSkills(ids: string[]) {
+export async function reorderSkills(ids: string[]): Promise<ActionState> {
   await requireAdmin();
-  await connectDB();
-  await Promise.all(ids.map((id, index) => Skill.findByIdAndUpdate(id, { order: index })));
-  revalidateSite();
+  try {
+    await connectDB();
+    await Promise.all(ids.map((id, index) => Skill.findByIdAndUpdate(id, { order: index })));
+    revalidateSite();
+    return { success: true };
+  } catch {
+    return { error: 'Failed to reorder skills.' };
+  }
 }

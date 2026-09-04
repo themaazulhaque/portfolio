@@ -134,9 +134,14 @@ export async function deleteExperience(id: string): Promise<ActionState> {
   }
 }
 
-export async function reorderExperiences(ids: string[]) {
+export async function reorderExperiences(ids: string[]): Promise<ActionState> {
   await requireAdmin();
-  await connectDB();
-  await Promise.all(ids.map((id, index) => Experience.findByIdAndUpdate(id, { order: index })));
-  revalidateSite();
+  try {
+    await connectDB();
+    await Promise.all(ids.map((id, index) => Experience.findByIdAndUpdate(id, { order: index })));
+    revalidateSite();
+    return { success: true };
+  } catch {
+    return { error: 'Failed to reorder experiences.' };
+  }
 }

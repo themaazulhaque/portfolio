@@ -4,30 +4,21 @@ import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { isCloudinaryConfigured, uploadToCloudinary } from '@/lib/cloudinary';
 import { isValidOrigin } from '@/lib/csrf';
+import { rateLimit } from '@/lib/rate-limit';
 
 const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads', 'reviews');
 const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
 const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
-
-const RATE_LIMIT_WINDOW = 60 * 1000;
-const MAX_REQUESTS_PER_WINDOW = 10;
-const requestCounts = new Map<string, { count: number; resetAt: number }>();
-
-function checkRateLimit(ip: string): boolean {
-  const now = Date.now();
-  const entry = requestCounts.get(ip);
-  if (!entry || now > entry.resetAt) {
-    requestCounts.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW });
-    return true;
-  }
-  if (entry.count >= MAX_REQUESTS_PER_WINDOW) return false;
-  entry.count++;
-  return true;
-}
+const SAFE_EXTENSIONS: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+};
 
 export async function POST(request: NextRequest) {
   const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
-  if (!checkRateLimit(ip)) {
+  const limiter = rateLimit(`review-upload:${ip}`, { limit: 10, windowMs: 60 * 1000 });
+  if (!limiter.allowed) {
     return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
   }
 
@@ -72,7 +63,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Cloudinary production storage is not configured. Contact the administrator.' }, { status: 500 });
   } else {
     // Local fallback for development only
-    const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg';
+    const ext = SAFE_EXTENSIONS[file.type] ?? 'jpg';
     const filename = `${uuidv4()}.${ext}`;
     const uploadPath = path.join(UPLOAD_DIR, filename);
     try {

@@ -135,12 +135,13 @@ export function ReviewsSection({ reviews, testimonialVideo }: ReviewsSectionProp
     [step]
   );
 
-  /* ── Autoplay ── */
+  /* ── Autoplay (pauses on hover/focus per WCAG 2.2.2) ── */
+  const [paused, setPaused] = useState(false);
   useEffect(() => {
-    if (n < 2) return;
+    if (n < 2 || paused) return;
     const id = window.setInterval(() => step(-1), 2500);
     return () => window.clearInterval(id);
-  }, [n, step]);
+  }, [n, step, paused]);
 
   /* ── Photo upload (preserved) ── */
   const ALLOWED_PHOTO_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -335,8 +336,12 @@ export function ReviewsSection({ reviews, testimonialVideo }: ReviewsSectionProp
                 role="group"
                 aria-roledescription="carousel"
                 onKeyDown={onKeyDown}
+                onMouseEnter={() => setPaused(true)}
+                onMouseLeave={() => setPaused(false)}
+                onFocus={() => setPaused(true)}
+                onBlur={() => setPaused(false)}
               >
-                <div className="review-carousel__stage">
+                <div className="review-carousel__stage" aria-live="polite" aria-atomic="false">
                   {reviews.map((review, i) => {
                     let rel = i - active;
                     if (rel > n / 2) rel -= n;

@@ -74,6 +74,7 @@ export function ContactSection({ settings, socialLinks }: ContactSectionProps) {
 
   const [state, action, pending] = useActionState(createContactMessage, {});
   const sent = Boolean((state as { success?: boolean }).success);
+  const errorMsg = (state as { error?: string }).error || "";
 
   useEffect(() => {
     const section = sectionRef.current;
@@ -151,6 +152,7 @@ export function ContactSection({ settings, socialLinks }: ContactSectionProps) {
                   {sent ? "✓" : "↗"}
                 </span>
               </button>
+              {errorMsg && <p className="contact-form-error" role="alert">{errorMsg}</p>}
             </form>
           </div>
 

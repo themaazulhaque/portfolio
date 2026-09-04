@@ -126,27 +126,37 @@ export async function deleteProject(id: string): Promise<{ error?: string; succe
 // ==========================================
 // TOGGLE PUBLISH
 // ==========================================
-export async function toggleProjectPublish(id: string, published: boolean) {
+export async function toggleProjectPublish(id: string, published: boolean): Promise<ProjectActionState> {
   await requireAdmin();
-  await connectDB();
-  await Project.findByIdAndUpdate(id, { published });
-  await auditLog({
-    action: published ? 'PUBLISH' : 'UNPUBLISH',
-    resource: 'project',
-    resourceId: id,
-  });
-  revalidateSite();
+  try {
+    await connectDB();
+    await Project.findByIdAndUpdate(id, { published });
+    await auditLog({
+      action: published ? 'PUBLISH' : 'UNPUBLISH',
+      resource: 'project',
+      resourceId: id,
+    });
+    revalidateSite();
+    return { success: true };
+  } catch {
+    return { error: 'Failed to update publish status.' };
+  }
 }
 
 // ==========================================
 // REORDER
 // ==========================================
-export async function reorderProjects(ids: string[]) {
+export async function reorderProjects(ids: string[]): Promise<ProjectActionState> {
   await requireAdmin();
-  await connectDB();
-  await Promise.all(ids.map((id, index) => Project.findByIdAndUpdate(id, { order: index })));
-  await auditLog({ action: 'REORDER', resource: 'project' });
-  revalidateSite();
+  try {
+    await connectDB();
+    await Promise.all(ids.map((id, index) => Project.findByIdAndUpdate(id, { order: index })));
+    await auditLog({ action: 'REORDER', resource: 'project' });
+    revalidateSite();
+    return { success: true };
+  } catch {
+    return { error: 'Failed to reorder projects.' };
+  }
 }
 
 // ==========================================

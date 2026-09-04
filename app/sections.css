@@ -190,7 +190,7 @@ em.serif, em.serif-accent { font-style: normal; }
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--hairline-2);
   border-radius: var(--radius-pill);
-  padding: 0.5rem 1.2rem;
+  padding: 0.65rem 1.4rem;
   cursor: pointer;
   transition: background 0.3s var(--ease-expo), border-color 0.3s;
 }
@@ -675,6 +675,10 @@ body.has-custom-cursor .project-card { cursor: none; }
   transition: opacity 0.5s var(--ease-expo) 0.15s, transform 0.5s var(--ease-expo) 0.15s;
 }
 .project-card:hover .p-desc { opacity: 0.95; transform: translateY(0); }
+
+@media (hover: none) {
+  .p-desc { opacity: 0.95; transform: translateY(0); }
+}
 
 .p-view {
   position: absolute;
@@ -1769,6 +1773,18 @@ body.has-custom-cursor .project-card { cursor: none; }
 .send-btn:hover .send-arrow { transform: translate(4px, -4px); }
 .send-btn.is-sent { background: var(--warm-white); color: #000; cursor: default; }
 
+.contact-form-error {
+  margin-top: 1rem;
+  padding: 0.8rem 1.2rem;
+  border-radius: var(--radius-soft);
+  background: rgba(220, 50, 50, 0.12);
+  border: 1px solid rgba(220, 50, 50, 0.3);
+  color: #f87171;
+  font-family: var(--font-ui);
+  font-size: var(--text-ui-small);
+  line-height: 1.5;
+}
+
 .contact-right { padding-top: clamp(0rem, 4vw, 3rem); }
 .contact-right-title {
   font-family: var(--font-ui);
@@ -1996,7 +2012,7 @@ body.has-custom-cursor .project-card { cursor: none; }
   .review-carousel__avatar { width: 60px; height: 60px; top: 22px; }
   .review-carousel__content { top: 100px; }
   .review-carousel__quote { font-size: 0.82rem; -webkit-line-clamp: 2; }
-  .review-carousel__arrow { width: 40px; height: 40px; font-size: 1.3rem; }
+  .review-carousel__arrow { width: 44px; height: 44px; font-size: 1.3rem; }
   .review-form-grid { grid-template-columns: 1fr; }
   .hero-phase { padding: 0 1.2rem; }
   .cs-meta-row { gap: 0; }
@@ -2022,7 +2038,7 @@ body.has-custom-cursor .project-card { cursor: none; }
   .review-carousel__quote { font-size: 0.75rem; -webkit-line-clamp: 2; }
   .review-carousel__name { font-size: 0.78rem; }
   .review-carousel__designation { font-size: 0.62rem; }
-  .review-carousel__arrow { width: 36px; height: 36px; font-size: 1.1rem; }
+  .review-carousel__arrow { width: 44px; height: 44px; font-size: 1.1rem; }
   .footer-cta-link { font-size: clamp(1.8rem, 8vw, 3rem); }
   .t-role { font-size: clamp(1.3rem, 5vw, 2rem); }
   .t-co { font-size: var(--text-ui-small); }

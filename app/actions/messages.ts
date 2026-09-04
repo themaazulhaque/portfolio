@@ -90,8 +90,8 @@ export async function createContactMessage(
     revalidatePath('/admin/messages');
 
     // Fire emails — do not block the response
-    sendContactNotification(raw).catch(() => {});
-    sendContactAcknowledgement(raw).catch(() => {});
+    sendContactNotification(raw).catch((err) => console.error("[email] Contact notification failed:", err));
+    sendContactAcknowledgement(raw).catch((err) => console.error("[email] Contact acknowledgement failed:", err));
 
     return { success: true };
   } catch {

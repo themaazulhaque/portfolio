@@ -4,6 +4,19 @@ type Bucket = { count: number; resetAt: number };
 
 const store = new Map<string, Bucket>();
 
+// Cleanup expired entries every 5 minutes to prevent memory leak
+const CLEANUP_INTERVAL = 5 * 60 * 1000;
+let lastCleanup = Date.now();
+
+function cleanupExpired(): void {
+  const now = Date.now();
+  if (now - lastCleanup < CLEANUP_INTERVAL) return;
+  lastCleanup = now;
+  for (const [key, bucket] of store) {
+    if (bucket.resetAt <= now) store.delete(key);
+  }
+}
+
 export interface RateLimitResult {
   allowed: boolean;
   remaining: number;
@@ -19,6 +32,8 @@ export function rateLimit(
   key: string,
   opts: { limit: number; windowMs: number }
 ): RateLimitResult {
+  cleanupExpired();
+
   const now = Date.now();
   const bucket = store.get(key);
 
