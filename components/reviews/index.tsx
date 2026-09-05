@@ -468,6 +468,7 @@ function ReviewsAction({
   formError,
   submitting,
   handleSubmit,
+  photoFile,
   photoPreview,
   photoUploading,
   photoError,
