@@ -17,10 +17,6 @@ function ensureClient(): Resend | null {
   return resendClient;
 }
 
-export function isEmailConfigured(): boolean {
-  return !!RESEND_API_KEY && !!ADMIN_EMAIL;
-}
-
 function fromAddress(): string {
   return EMAIL_FROM_NAME ? `${EMAIL_FROM_NAME} <${EMAIL_FROM}>` : EMAIL_FROM;
 }
@@ -36,10 +32,6 @@ function escapeHtml(value: string): string {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
-}
-
-function validateEmail(email: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
 export interface EmailResult {

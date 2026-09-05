@@ -11,7 +11,6 @@
     "seed": "dotenv -e .env.local -- npx tsx scripts/seed-admin.ts"
   },
   "dependencies": {
-    "@hookform/resolvers": "^5.7.1",
     "bcryptjs": "^3.0.3",
     "cloudinary": "^2.11.0",
     "gsap": "^3.12.7",
@@ -20,10 +19,8 @@
     "next": "^16.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-hook-form": "^7.84.0",
     "resend": "^6.26.0",
     "server-only": "^0.0.1",
-    "tsx": "^4.23.5",
     "uuid": "^14.0.1",
     "web-push": "^3.6.7",
     "ws": "^8.21.3",
@@ -41,6 +38,7 @@
     "eslint": "^9.39.5",
     "eslint-config-next": "^16.3.0",
     "tailwindcss": "^4.0.0",
+    "tsx": "^4.23.5",
     "typescript": "^5.8.0"
   }
 }
