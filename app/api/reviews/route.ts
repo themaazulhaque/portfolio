@@ -107,12 +107,16 @@ async function triggerReviewNotifications(data: {
 
   // Email notifications — non-blocking
   if (data.email) {
-    sendReviewThankYou({ name: data.name, email: data.email }).catch((err) => console.error("[email] Review thank-you failed:", err));
+    sendReviewThankYou({ name: data.name, email: data.email }).then((r) => {
+      if (!r.success) console.error("[email] Review thank-you FAILED:", r.error);
+    }).catch((err) => console.error("[email] Review thank-you exception:", err));
   }
   sendNewReviewNotification({
     name: data.name,
     email: data.email || 'N/A',
     designation: data.designation,
     review: data.reviewText,
-  }).catch((err) => console.error("[email] Review notification failed:", err));
+  }).then((r) => {
+    if (!r.success) console.error("[email] Review notification FAILED:", r.error);
+  }).catch((err) => console.error("[email] Review notification exception:", err));
 }

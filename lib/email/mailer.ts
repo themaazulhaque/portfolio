@@ -56,8 +56,9 @@ async function sendEmail(options: {
 }): Promise<EmailResult> {
   const client = ensureClient();
   if (!client) {
-    console.warn("[email] Resend not configured — skipping email");
-    return { success: false, error: "Email not configured" };
+    const msg = "Email not configured — RESEND_API_KEY is missing from environment variables";
+    console.error(`[email] ${msg}`);
+    return { success: false, error: msg };
   }
 
   try {
