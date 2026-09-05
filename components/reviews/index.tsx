@@ -444,6 +444,7 @@ export function ReviewsSection({ reviews, testimonialVideo }: ReviewsSectionProp
           formError={formError}
           submitting={submitting}
           handleSubmit={handleSubmit}
+          photoFile={photoFile}
           photoPreview={photoPreview}
           photoUploading={photoUploading}
           photoError={photoError}
@@ -483,6 +484,7 @@ function ReviewsAction({
   formError: string;
   submitting: boolean;
   handleSubmit: (e: React.FormEvent) => Promise<void>;
+  photoFile: File | null;
   photoPreview: string;
   photoUploading: boolean;
   photoError: string;
