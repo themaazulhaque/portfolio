@@ -1,13 +1,12 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { gsap, ScrollTrigger } from "../../lib/gsap";
+import { gsap } from "../../lib/gsap";
 import { revealClip } from "../../lib/reveal";
 import type { PublicReview } from "../../lib/types";
 
 interface ReviewsSectionProps {
   reviews: PublicReview[];
-  testimonialVideo?: string;
 }
 
 function getInitials(name: string): string {
@@ -32,7 +31,7 @@ const SIDE_TILT = 23;
 const GAP = 4;
 const OPACITY_DIM = 0.61;
 
-export function ReviewsSection({ reviews, testimonialVideo }: ReviewsSectionProps) {
+export function ReviewsSection({ reviews }: ReviewsSectionProps) {
   const sectionRef = useRef<HTMLElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -41,12 +40,7 @@ export function ReviewsSection({ reviews, testimonialVideo }: ReviewsSectionProp
   const lockRef = useRef(false);
   const n = reviews.length;
 
-  /* ── Video state ── */
-  const [videoLoaded, setVideoLoaded] = useState(false);
-  const [videoError, setVideoError] = useState(false);
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-
-  /* ── Form state (preserved from original) ── */
+  /* ── Form state ── */
   const [showForm, setShowForm] = useState(false);
   const [formState, setFormState] = useState({
     name: "",
@@ -81,19 +75,6 @@ export function ReviewsSection({ reviews, testimonialVideo }: ReviewsSectionProp
       if (photoPreview) URL.revokeObjectURL(photoPreview);
     };
   }, [photoPreview]);
-
-  /* ── Video autoplay retry ── */
-  useEffect(() => {
-    if (!testimonialVideo || !videoRef.current) return;
-    const vid = videoRef.current;
-    const playPromise = vid.play();
-    if (playPromise !== undefined) {
-      playPromise.catch(() => {
-        vid.muted = true;
-        vid.play().catch(() => setVideoError(true));
-      });
-    }
-  }, [testimonialVideo]);
 
   /* ── Carousel lock ── */
   const lock = useCallback(() => {
@@ -139,11 +120,26 @@ export function ReviewsSection({ reviews, testimonialVideo }: ReviewsSectionProp
   const [paused, setPaused] = useState(false);
   useEffect(() => {
     if (n < 2 || paused) return;
-    const id = window.setInterval(() => step(-1), 2500);
+    const id = window.setInterval(() => step(-1), 3000);
     return () => window.clearInterval(id);
   }, [n, step, paused]);
 
-  /* ── Photo upload (preserved) ── */
+  /* ── Touch/swipe support ── */
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  }, []);
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    const dy = e.changedTouches[0].clientY - touchStartY.current;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+      step(dx > 0 ? 1 : -1);
+    }
+  }, [step]);
+
+  /* ── Photo upload ── */
   const ALLOWED_PHOTO_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
   const MAX_PHOTO_SIZE = 10 * 1024 * 1024;
 
@@ -231,10 +227,8 @@ export function ReviewsSection({ reviews, testimonialVideo }: ReviewsSectionProp
     setSubmitting(false);
   };
 
-  const hasVideo = Boolean(testimonialVideo);
-
   /* ── Empty state ── */
-  if (n === 0 && !hasVideo) {
+  if (n === 0) {
     return (
       <section className="section reviews" id="reviews" ref={sectionRef} aria-label="Client Reviews">
         <div className="container">
@@ -287,151 +281,126 @@ export function ReviewsSection({ reviews, testimonialVideo }: ReviewsSectionProp
           </div>
         </div>
 
-        <div className="reviews-split">
-          {/* ── Left Column: Video ── */}
-          <div className="reviews-split__video-col">
-            {hasVideo ? (
-              <div className="reviews-video-container">
-                {!videoLoaded && !videoError && (
-                  <div className="reviews-video-placeholder" aria-hidden="true">
-                    <div className="reviews-video-spinner" />
-                    <span className="reviews-video-placeholder-text">Loading video</span>
-                  </div>
-                )}
-                {videoError && (
-                  <div className="reviews-video-placeholder reviews-video-placeholder--error">
-                    <span className="reviews-video-placeholder-text">Video unavailable</span>
-                  </div>
-                )}
-                <video
-                  ref={videoRef}
-                  className={`reviews-video${videoLoaded ? " is-loaded" : ""}`}
-                  src={testimonialVideo}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  onLoadedData={() => setVideoLoaded(true)}
-                  onError={() => setVideoError(true)}
-                  aria-label="Testimonial showcase video"
-                />
-              </div>
-            ) : (
-              <div className="reviews-video-container">
-                <div className="reviews-video-placeholder">
-                  <span className="reviews-video-placeholder-text">
-                    Upload a testimonial video from the Admin Panel
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
+        <div className="reviews-carousel-wrap">
+          <div
+            className="review-carousel"
+            tabIndex={0}
+            role="group"
+            aria-roledescription="carousel"
+            onKeyDown={onKeyDown}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+            onMouseEnter={() => setPaused(true)}
+            onMouseLeave={() => setPaused(false)}
+            onFocus={() => setPaused(true)}
+            onBlur={() => setPaused(false)}
+          >
+            <div className="review-carousel__stage" aria-live="polite" aria-atomic="false">
+              {reviews.map((review, i) => {
+                let rel = i - active;
+                if (rel > n / 2) rel -= n;
+                if (rel < -n / 2) rel += n;
 
-          {/* ── Right Column: Carousel ── */}
-          <div className="reviews-split__carousel-col">
-            {n > 0 ? (
-              <div
-                className="review-carousel"
-                tabIndex={0}
-                role="group"
-                aria-roledescription="carousel"
-                onKeyDown={onKeyDown}
-                onMouseEnter={() => setPaused(true)}
-                onMouseLeave={() => setPaused(false)}
-                onFocus={() => setPaused(true)}
-                onBlur={() => setPaused(false)}
-              >
-                <div className="review-carousel__stage" aria-live="polite" aria-atomic="false">
-                  {reviews.map((review, i) => {
-                    let rel = i - active;
-                    if (rel > n / 2) rel -= n;
-                    if (rel < -n / 2) rel += n;
+                const ax = Math.abs(rel);
+                const visible = ax <= MAX_VISIBLE;
+                const isActive = rel === 0;
+                const sc = Math.max(0.4, 1 - ax * SCALE_STEP);
+                const tx = rel * (GAP * 30);
+                const tz = -ax * DEPTH;
+                const ry = -rel * TILT;
+                const rz = rel * SIDE_TILT;
 
-                    const ax = Math.abs(rel);
-                    const visible = ax <= MAX_VISIBLE;
-                    const isActive = rel === 0;
-                    const sc = Math.max(0.4, 1 - ax * SCALE_STEP);
-                    const tx = rel * (GAP * 30);
-                    const tz = -ax * DEPTH;
-                    const ry = -rel * TILT;
-                    const rz = rel * SIDE_TILT;
-
-                    return (
-                      <div
-                        key={review._id}
-                        className="review-carousel__card"
-                        onClick={() => handleCardClick(i)}
-                        aria-label={`${review.name} — review`}
-                        aria-hidden={!visible}
-                        style={{
-                          width: CARD_W,
-                          height: CARD_H,
-                          transform: `translate(-50%, -50%) translateX(${tx}px) translateZ(${tz}px) rotateY(${ry}deg) rotateZ(${rz}deg) scale(${sc})`,
-                          opacity: visible ? 1 : 0,
-                          pointerEvents: visible ? "auto" : "none",
-                          cursor: isActive ? "default" : "pointer",
-                        }}
-                      >
-                        <div className="review-carousel__avatar">
-                          {review.image ? (
-                            <img src={review.image} alt="" draggable={false} />
-                          ) : (
-                            <span className="review-carousel__initials">{getInitials(review.name)}</span>
-                          )}
-                        </div>
-                        <div className="review-carousel__gradient" />
-                        <div className="review-carousel__content">
-                          <div className="review-carousel__stars" aria-label="5 out of 5 stars">
-                            {[...Array(5)].map((_, si) => (
-                              <span key={si}>★</span>
-                            ))}
-                          </div>
-                          <blockquote className="review-carousel__quote">
-                            &ldquo;{review.review}&rdquo;
-                          </blockquote>
-                          <div className="review-carousel__author">
-                            <span className="review-carousel__name">{review.name}</span>
-                            {review.designation && (
-                              <span className="review-carousel__designation">{review.designation}</span>
-                            )}
-                          </div>
-                        </div>
-                        <div
-                          className="review-carousel__dim"
-                          style={{ opacity: isActive ? 0 : 1 - OPACITY_DIM }}
-                        />
+                return (
+                  <div
+                    key={review._id}
+                    className="review-carousel__card"
+                    onClick={() => handleCardClick(i)}
+                    aria-label={`${review.name} — review`}
+                    aria-hidden={!visible}
+                    style={{
+                      width: CARD_W,
+                      height: CARD_H,
+                      transform: `translate(-50%, -50%) translateX(${tx}px) translateZ(${tz}px) rotateY(${ry}deg) rotateZ(${rz}deg) scale(${sc})`,
+                      opacity: visible ? 1 : 0,
+                      pointerEvents: visible ? "auto" : "none",
+                      cursor: isActive ? "default" : "pointer",
+                    }}
+                  >
+                    <div className="review-carousel__avatar">
+                      {review.image ? (
+                        <img src={review.image} alt="" draggable={false} />
+                      ) : (
+                        <span className="review-carousel__initials">{getInitials(review.name)}</span>
+                      )}
+                    </div>
+                    <div className="review-carousel__gradient" />
+                    <div className="review-carousel__content">
+                      <div className="review-carousel__stars" aria-label="5 out of 5 stars">
+                        {[...Array(5)].map((_, si) => (
+                          <span key={si}>&#9733;</span>
+                        ))}
                       </div>
-                    );
-                  })}
-                </div>
+                      <blockquote className="review-carousel__quote">
+                        &ldquo;{review.review}&rdquo;
+                      </blockquote>
+                      <div className="review-carousel__author">
+                        <span className="review-carousel__name">{review.name}</span>
+                        {review.designation && (
+                          <span className="review-carousel__designation">{review.designation}</span>
+                        )}
+                      </div>
+                    </div>
+                    <div
+                      className="review-carousel__dim"
+                      style={{ opacity: isActive ? 0 : 1 - OPACITY_DIM }}
+                    />
+                  </div>
+                );
+              })}
+            </div>
 
-                {n > 1 && (
-                  <>
-                    <button
-                      type="button"
-                      className="review-carousel__arrow review-carousel__arrow--left"
-                      onClick={() => step(1)}
-                      aria-label="Previous review"
-                    >
-                      ‹
-                    </button>
-                    <button
-                      type="button"
-                      className="review-carousel__arrow review-carousel__arrow--right"
-                      onClick={() => step(-1)}
-                      aria-label="Next review"
-                    >
-                      ›
-                    </button>
-                  </>
-                )}
-              </div>
-            ) : (
-              <div className="review-empty">
-                <p className="review-empty-text">No reviews yet.</p>
-              </div>
+            {n > 1 && (
+              <>
+                <button
+                  type="button"
+                  className="review-carousel__arrow review-carousel__arrow--left"
+                  onClick={() => step(1)}
+                  aria-label="Previous review"
+                >
+                  &#8249;
+                </button>
+                <button
+                  type="button"
+                  className="review-carousel__arrow review-carousel__arrow--right"
+                  onClick={() => step(-1)}
+                  aria-label="Next review"
+                >
+                  &#8250;
+                </button>
+              </>
             )}
           </div>
+
+          {n > 1 && (
+            <div className="review-carousel__dots" role="tablist" aria-label="Review navigation">
+              {reviews.map((review, i) => {
+                let rel = i - active;
+                if (rel > n / 2) rel -= n;
+                if (rel < -n / 2) rel += n;
+                return (
+                  <button
+                    key={review._id}
+                    type="button"
+                    className={`review-carousel__dot${rel === 0 ? " is-active" : ""}`}
+                    onClick={() => { lock(); setActive(i); }}
+                    role="tab"
+                    aria-selected={rel === 0}
+                    aria-label={`Go to review by ${review.name}`}
+                  />
+                );
+              })}
+            </div>
+          )}
         </div>
 
         <ReviewsAction
@@ -457,7 +426,7 @@ export function ReviewsSection({ reviews, testimonialVideo }: ReviewsSectionProp
   );
 }
 
-/* ── Extracted form action (preserved exactly from original) ── */
+/* ── Extracted form action ── */
 function ReviewsAction({
   showForm,
   setShowForm,
@@ -572,12 +541,12 @@ function ReviewsAction({
                       <img src={photoPreview} alt="Profile preview" />
                     ) : (
                       <span className="review-photo-placeholder" aria-hidden="true">
-                        ↑
+                        &#8593;
                       </span>
                     )}
                     {photoUploading && (
                       <span className="review-photo-uploading" aria-label="Uploading">
-                        …
+                        &#8230;
                       </span>
                     )}
                   </div>
@@ -616,7 +585,7 @@ function ReviewsAction({
               {formError && <div className="review-form-error">{formError}</div>}
               <div className="review-form-actions">
                 <button type="submit" className="send-btn" disabled={submitting}>
-                  {submitting ? "Submitting…" : "Submit Review"}
+                  {submitting ? "Submitting\u2026" : "Submit Review"}
                 </button>
                 <button type="button" className="review-cancel-btn" onClick={() => setShowForm(false)}>
                   Cancel
