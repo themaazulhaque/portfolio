@@ -337,7 +337,7 @@ export function ImageSequenceHero({
           <div className="hero-backdrop" aria-hidden="true" />
 
           {/* Editorial Typography (Layered Behind Subject/Canvas) */}
-          <div className="hero-typography" aria-hidden="true">
+          <div className="hero-typography">
             {/* Phase 1: Main Name & Primary Title */}
             <div className="hero-phase" style={phase1Style}>
               <span className="text-editorial-tag">HELLO.</span>

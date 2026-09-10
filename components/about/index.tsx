@@ -128,7 +128,7 @@ export function AboutSection({ name, location, availability, portrait }: AboutSe
               <div className="portrait-img">
                 <img
                   src={portraitSrc}
-                  alt="Portrait — cinematic still from the hero sequence"
+                  alt={`${name || "Maazul Haque"} — portrait`}
                   loading="lazy"
                 />
               </div>
