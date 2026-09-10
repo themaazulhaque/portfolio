@@ -13,8 +13,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   if (!project) return { title: "Project Not Found" };
 
-  const title = `${project.title} — Case Study | Maazul Haque`;
-  const description = project.subtitle || project.desc;
+  const title = `${project.title} — Case Study by Maazul Haque`;
+  const description = project.subtitle || project.desc || `${project.title} — a case study by Maazul Haque showcasing ${project.cat || 'software engineering'} work.`;
   const url = `${PRODUCTION_URL}/work/${project.slug}`;
   const image = project.coverImage || project.image || undefined;
 
@@ -70,8 +70,60 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
     notFound();
   }
 
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: PRODUCTION_URL,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Work",
+        item: `${PRODUCTION_URL}/#projects`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: project.title,
+        item: `${PRODUCTION_URL}/work/${project.slug}`,
+      },
+    ],
+  };
+
+  const articleJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: project.title,
+    description: project.subtitle || project.desc,
+    url: `${PRODUCTION_URL}/work/${project.slug}`,
+    image: project.coverImage || project.image || undefined,
+    author: {
+      "@type": "Person",
+      name: settings.name || "Maazul Haque",
+      url: PRODUCTION_URL,
+    },
+    publisher: {
+      "@type": "Person",
+      name: settings.name || "Maazul Haque",
+      url: PRODUCTION_URL,
+    },
+  };
+
   return (
     <CaseStudyClient>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
+      />
       <CaseStudyContent
         project={project}
         prevProject={prev}

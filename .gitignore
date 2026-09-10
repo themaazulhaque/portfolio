@@ -1,5 +1,7 @@
 # dependencies
 node_modules/
+__pycache__/
+*.py[cod]
 
 # next.js
 .next/
@@ -44,3 +46,19 @@ public/uploads/
 .netlify
 
 .vercel
+
+# Google OAuth credentials
+
+scripts/oauth_credentials.json
+
+scripts/gsc_token.json
+
+scripts/gsc_token*.json
+
+scripts/oauth_flow_state*.json
+
+scripts/token*.json
+
+oauth_credentials.json
+
+gsc_token.json

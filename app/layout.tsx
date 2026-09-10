@@ -15,10 +15,10 @@ export async function generateMetadata(): Promise<Metadata> {
   const socialLinks = await getPublicSocialLinks();
 
   const name = settings.name || "Maazul Haque";
-  const title = settings.seoTitle || `${name} — Full-Stack & Mobile App Developer`;
+  const title = settings.seoTitle || `${name} — Software Developer & Full-Stack Engineer`;
   const description =
     settings.seoDescription ||
-    `${name} is a full-stack software engineer specializing in React, Next.js, React Native, Django, and Python. View projects, experience, and get in touch.`;
+    `${name} is a software developer and full-stack engineer specializing in React, Next.js, React Native, Node.js, and Python. View projects, experience, and get in touch.`;
 
   const ogImage = settings.ogImageUrl || `${PRODUCTION_URL}/uploads/6561a428-d918-4e1a-bfbb-faebbf7e10cb.png`;
 
@@ -86,39 +86,58 @@ export default async function RootLayout({ children }: RootLayoutProps) {
     .filter((link) => link.visible && link.url)
     .map((link) => link.url);
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Person",
-    name,
-    url: PRODUCTION_URL,
-    image: settings.aboutPortrait || undefined,
-    jobTitle: settings.title || "Software Engineer",
-    description:
-      settings.seoDescription ||
-      `${name} is a full-stack software engineer specializing in React, Next.js, React Native, Django, and Python.`,
-    email: settings.email,
-    address: settings.location
-      ? {
-          "@type": "PostalAddress",
-          addressLocality: settings.location.split("·")[0]?.trim(),
-          addressCountry: "IN",
-        }
-      : undefined,
-    sameAs: sameAs.length > 0 ? sameAs : undefined,
-    knowsAbout: [
-      "React",
-      "Next.js",
-      "React Native",
-      "TypeScript",
-      "JavaScript",
-      "Node.js",
-      "Django",
-      "Python",
-      "Full-Stack Development",
-      "Mobile App Development",
-      "Web Development",
-    ],
-  };
+  const jsonLd = [
+    {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      name,
+      url: PRODUCTION_URL,
+      image: settings.aboutPortrait || undefined,
+      jobTitle: settings.title || "Software Engineer",
+      description:
+        settings.seoDescription ||
+        `${name} is a software developer and full-stack engineer specializing in React, Next.js, React Native, Node.js, and Python.`,
+      email: settings.email,
+      address: settings.location
+        ? {
+            "@type": "PostalAddress",
+            addressLocality: settings.location.split("·")[0]?.trim(),
+            addressCountry: "IN",
+          }
+        : undefined,
+      sameAs: sameAs.length > 0 ? sameAs : undefined,
+      knowsAbout: [
+        "React",
+        "Next.js",
+        "React Native",
+        "TypeScript",
+        "JavaScript",
+        "Node.js",
+        "Django",
+        "Python",
+        "MongoDB",
+        "PostgreSQL",
+        "Full-Stack Development",
+        "Mobile App Development",
+        "Web Development",
+        "Software Engineering",
+      ],
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      name: `${name} — Portfolio`,
+      url: PRODUCTION_URL,
+      description:
+        settings.seoDescription ||
+        `${name}'s software engineering portfolio — projects, case studies, and experience.`,
+      author: {
+        "@type": "Person",
+        name,
+        url: PRODUCTION_URL,
+      },
+    },
+  ];
 
   return (
     <html lang="en" data-scroll-behavior="smooth">
@@ -135,6 +154,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
           rel="stylesheet"
         />
         <link rel="manifest" href="/manifest.json" />
+        <link rel="apple-touch-icon" href={settings.faviconUrl || "/uploads/c9639286-dcbc-43da-aef4-8d6bbf1e7823.png"} />
         <meta name="theme-color" content="#060608" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
