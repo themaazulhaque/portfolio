@@ -1,5 +1,51 @@
 # SEO Changelog
 
+## 2026-09-10 — Phase 3: Search Console Baseline + Entity Signal Enhancement
+
+### Search Console Findings
+
+| Metric | Value |
+|--------|-------|
+| Property | `sc-domain:maazulhaque.qd.je` |
+| Access Level | siteOwner |
+| Sitemap Submitted | ✓ `https://maazulhaque.qd.je/sitemap.xml` |
+| Sitemap Downloaded | ✓ 2026-09-10T18:19:22 |
+| URLs Submitted | 4 |
+| URLs Indexed | 0 |
+| Search Analytics (28 days) | NO DATA |
+| Search Analytics (90 days) | NO DATA |
+| URL Inspection API | Not available for this property |
+
+**Analysis**: The site is new and Google has discovered the sitemap but hasn't indexed any pages yet. This is normal for new domains. The site is fully crawlable with server-rendered HTML, proper metadata, and structured data.
+
+### Changes Made
+
+| File | Change | Purpose |
+|------|--------|---------|
+| `app/layout.tsx` | Enhanced homepage title with technology keywords | Better entity keyword targeting for "Maazul Haque developer" queries |
+| `app/layout.tsx` | Enhanced meta description with location and case studies | More descriptive for search snippets |
+| `app/layout.tsx` | Improved Person schema with Delhi, 8 years, AI products | Richer entity understanding |
+| `app/layout.tsx` | Enhanced WebSite schema description | Better site purpose signaling |
+| `app/work/[slug]/page.tsx` | Improved case study fallback descriptions | More descriptive meta for thin pages |
+
+### Build Status
+- `npm run build`: ✓ Compiled successfully
+
+### Deployment
+- Commit: `5dc17d9`
+- Deploy: `dep-dahfcaijnfac738mjh4g` — LIVE
+- Production URL: https://maazulhaque.qd.je
+
+### Post-Deploy Verification
+| Route | Status | Title | Canonical |
+|-------|--------|-------|-----------|
+| `/` | 200 | Maazul Haque — Software Engineer | ✓ |
+| `/work/orbit-android-app` | 200 | Case Study by Maazul Haque | ✓ |
+| `/work/halal-pizza-fun` | 200 | Case Study by Maazul Haque | ✓ |
+| `/work/acumen-ai` | 200 | Case Study by Maazul Haque | ✓ |
+
+---
+
 ## 2026-09-10 — Phase 2: Enhanced Structured Data & Entity Optimization
 
 ### Changes Made
@@ -43,36 +89,6 @@
 - Case studies: Person + WebSite + BreadcrumbList + Article schema present
 - Canonical URLs: Correct on all pages
 - OG/Twitter tags: Present and correct
-
----
-
-## BLOCKER: Search Console Property
-
-The Google Search Console authenticated account (`maazul-haque-seo` project) does NOT have access to the `maazulhaque.qd.je` property.
-
-**Available property:** `sc-domain:pizzafun.co.in` (siteOwner)
-
-**Missing properties:**
-- `sc-domain:maazulhaque.qd.je` (not added)
-- `https://maazulhaque.qd.je/` (not added)
-
-### Required Action
-User must add the property to Google Search Console:
-1. Go to https://search.google.com/search-console
-2. Click "Add property"
-3. Choose "Domain" type
-4. Enter `maazulhaque.qd.je`
-5. Verify via DNS TXT record (Cloudflare)
-6. Grant the OAuth account access
-
-### What's Blocked Until Property is Added
-- Search Console baseline data
-- Sitemap submission
-- URL inspection
-- Indexing requests
-- Search analytics
-- CTR optimization
-- Ranking opportunity analysis
 
 ---
 
