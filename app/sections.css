@@ -525,7 +525,7 @@ em.serif, em.serif-accent { font-style: normal; }
 
 .projects-viewport {
   position: relative;
-  overflow: hidden;
+  overflow: clip;
   border-top: 1px solid var(--hairline-1);
   border-bottom: 1px solid var(--hairline-1);
   padding: clamp(1.5rem, 4vw, 4rem) 0;
@@ -853,10 +853,8 @@ body.has-custom-cursor .project-card { cursor: none; }
 
 .stack-perspective {
   perspective: 1200px;
-  overflow-x: auto;
+  overflow-x: clip;
   overflow-y: visible;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
   padding: 2rem 0;
 }
 .stack-perspective::-webkit-scrollbar { display: none; }
@@ -869,6 +867,7 @@ body.has-custom-cursor .project-card { cursor: none; }
   min-width: min-content;
   justify-content: center;
   align-items: center;
+  flex-wrap: nowrap;
 }
 
 .stack-card {
@@ -1230,8 +1229,8 @@ body.has-custom-cursor .project-card { cursor: none; }
 
 .review-carousel__stage {
   position: relative;
-  width: 380px;
-  height: 420px;
+  width: min(380px, 85vw);
+  height: min(420px, 90vw);
   transform-style: preserve-3d;
 }
 
@@ -1941,7 +1940,7 @@ body.has-custom-cursor .project-card { cursor: none; }
 
 /* ---------- Responsive ---------- */
 @media (max-width: 1200px) {
-  .stack-row { justify-content: flex-start; }
+  .stack-row { justify-content: flex-start; flex-wrap: wrap; gap: 4px; min-width: 0; }
   .t-entry { grid-template-columns: clamp(4.5rem, 11vw, 8rem) 1fr; }
   .contact-grid { grid-template-columns: minmax(0, 6fr) minmax(0, 6fr); gap: 3rem; }
 }
@@ -1960,11 +1959,13 @@ body.has-custom-cursor .project-card { cursor: none; }
   .contact-grid { grid-template-columns: 1fr; }
   .contact-right { padding-top: 0; }
   .review-carousel { min-height: 460px; }
-  .review-carousel__stage { width: 340px; height: 380px; }
+  .review-carousel__stage { width: min(340px, 80vw); height: min(380px, 85vw); }
+  .review-carousel__card { width: min(340px, 80vw) !important; height: min(380px, 85vw) !important; }
 }
 
 @media (max-width: 768px) {
-  .stack-row { justify-content: flex-start; gap: 0; }
+  .stack-row { justify-content: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
+  .stack-card { margin-left: 0; }
   .timeline { --tl-gutter: clamp(1.75rem, 6vw, 2.5rem); padding-left: var(--tl-gutter); }
   .timeline-line { left: 0.5rem; }
   .t-entry { grid-template-columns: 1fr; gap: 1.2rem; }
@@ -1983,15 +1984,18 @@ body.has-custom-cursor .project-card { cursor: none; }
   .contact-headline { max-width: 100%; line-height: 1.15; }
   .ghost-word { font-size: clamp(4rem, 18vw, 10rem); }
   .review-carousel { min-height: 420px; }
-  .review-carousel__stage { width: 300px; height: 340px; }
+  .review-carousel__stage { width: min(300px, 82vw); height: min(340px, 80vw); }
   .review-carousel__avatar { width: 60px; height: 60px; top: 22px; }
   .review-carousel__content { top: 100px; }
   .review-carousel__quote { font-size: 0.82rem; -webkit-line-clamp: 2; }
   .review-carousel__arrow { width: 44px; height: 44px; font-size: 1.3rem; }
   .review-form-grid { grid-template-columns: 1fr; }
+  .review-carousel__card { width: min(300px, 82vw) !important; height: min(340px, 80vw) !important; }
   .hero-phase { padding: 0 1.2rem; }
   .cs-meta-row { gap: 0; }
   .cs-meta-cell { min-width: 0; }
+  .section-head { flex-direction: column; align-items: flex-start; gap: 1rem; }
+  .section-head .head-meta { text-align: left; white-space: normal; }
 }
 
 @media (max-width: 480px) {
@@ -2005,18 +2009,19 @@ body.has-custom-cursor .project-card { cursor: none; }
   .contact-form { max-width: 100%; }
   .review-form-wrap { max-width: 100%; }
   .review-carousel { min-height: 380px; }
-  .review-carousel__stage { width: 260px; height: 300px; }
+  .review-carousel__stage { width: min(260px, 78vw); height: min(300px, 75vw); }
   .review-carousel__avatar { width: 52px; height: 52px; top: 18px; }
   .review-carousel__content { top: 88px; }
   .review-carousel__quote { font-size: 0.75rem; -webkit-line-clamp: 2; }
   .review-carousel__name { font-size: 0.78rem; }
   .review-carousel__designation { font-size: 0.62rem; }
   .review-carousel__arrow { width: 44px; height: 44px; font-size: 1.1rem; }
+  .review-carousel__card { width: min(260px, 78vw) !important; height: min(300px, 75vw) !important; }
   .footer-cta-link { font-size: clamp(1.8rem, 8vw, 3rem); }
   .t-role { font-size: clamp(1.3rem, 5vw, 2rem); }
   .t-co { font-size: var(--text-ui-small); }
   .service-card { padding: clamp(1.2rem, 4vw, 1.8rem); }
-  .stack-card { width: 68px; height: 86px; }
+  .stack-card { width: 68px; height: 86px; margin-left: 0; }
   .stack-card__logo { width: 34px; height: 34px; }
   .stack-card__logo img { width: 18px; height: 18px; }
   .stack-card__name { font-size: 0.58rem; }
