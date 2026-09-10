@@ -15,10 +15,10 @@ export async function generateMetadata(): Promise<Metadata> {
   const socialLinks = await getPublicSocialLinks();
 
   const name = settings.name || "Maazul Haque";
-  const title = settings.seoTitle || `${name} — Software Developer & Full-Stack Engineer`;
+  const title = settings.seoTitle || `${name} — Software Developer & Full-Stack Engineer | React, Next.js, Node.js`;
   const description =
     settings.seoDescription ||
-    `${name} is a software developer and full-stack engineer specializing in React, Next.js, React Native, Node.js, and Python. View projects, experience, and get in touch.`;
+    `${name} is a software developer and full-stack engineer based in Delhi, India. Specializing in React, Next.js, React Native, Node.js, and Python. View projects, case studies, and experience.`;
 
   const ogImage = settings.ogImageUrl || `${PRODUCTION_URL}/uploads/6561a428-d918-4e1a-bfbb-faebbf7e10cb.png`;
 
@@ -96,7 +96,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
       jobTitle: settings.title || "Software Engineer",
       description:
         settings.seoDescription ||
-        `${name} is a software developer and full-stack engineer specializing in React, Next.js, React Native, Node.js, and Python.`,
+        `${name} is a software developer and full-stack engineer based in Delhi, India. Specializing in React, Next.js, React Native, Node.js, Python, and AI-powered products. Eight years of experience building web and mobile applications.`,
       email: settings.email,
       address: settings.location
         ? {
@@ -130,7 +130,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
       url: PRODUCTION_URL,
       description:
         settings.seoDescription ||
-        `${name}'s software engineering portfolio — projects, case studies, and experience.`,
+        `${name}'s software engineering portfolio — showcasing web and mobile app projects, case studies, and professional experience in React, Next.js, and full-stack development.`,
       author: {
         "@type": "Person",
         name,

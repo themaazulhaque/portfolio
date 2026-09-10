@@ -13,8 +13,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   if (!project) return { title: "Project Not Found" };
 
-  const title = `${project.title} — Case Study by Maazul Haque`;
-  const description = project.subtitle || project.desc || `${project.title} — a case study by Maazul Haque showcasing ${project.cat || 'software engineering'} work.`;
+  const name = "Maazul Haque";
+  const title = `${project.title} — Case Study by ${name}`;
+  const description = project.subtitle || project.desc || `${project.title} is a ${project.cat || 'software engineering'} project by ${name}. Built with ${project.stack || 'modern technologies'}. Read the full case study covering overview, challenge, solution, and results.`;
   const url = `${PRODUCTION_URL}/work/${project.slug}`;
   const image = project.coverImage || project.image || undefined;
 
