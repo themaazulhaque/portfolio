@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import { Project } from '@/lib/models';
+import { buildCaseStudyResources } from '@/lib/sanitize';
 
 const MIME_MAP: Record<string, string> = {
   pdf: 'application/pdf',
@@ -59,7 +60,21 @@ export async function GET(
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
 
-    const resources = Array.isArray(project.resources) ? project.resources : [];
+    // Build the same resource list the public page uses (handles both new + legacy)
+    const resources = buildCaseStudyResources({
+      liveUrl: project.liveUrl,
+      githubUrl: project.githubUrl,
+      repository: project.repository,
+      documentationUrl: project.documentationUrl,
+      figmaUrl: project.figmaUrl,
+      casePdfUrl: project.casePdfUrl,
+      videoUrl: project.videoUrl,
+      demoCredentials: project.demoCredentials,
+      clientWebsite: project.clientWebsite,
+      additionalLinks: Array.isArray(project.additionalLinks) ? project.additionalLinks : [],
+      resources: Array.isArray(project.resources) ? project.resources : [],
+    });
+
     if (resourceIndex >= resources.length) {
       return NextResponse.json({ error: 'Resource not found' }, { status: 404 });
     }
@@ -72,9 +87,9 @@ export async function GET(
     const fileUrl = resource.value;
     const label = resource.label || 'download';
 
-    // Only proxy file downloads (pdf, apk, zip, image, download)
+    // Only proxy file downloads (pdf, apk, zip, image, download, other)
     const fileType = resource.type || 'link';
-    if (fileType === 'link' || fileType === 'github' || fileType === 'figma' || fileType === 'video' || fileType === 'documentation') {
+    if (['link', 'github', 'figma', 'video', 'documentation'].includes(fileType)) {
       return NextResponse.json({ error: 'This resource is not a downloadable file' }, { status: 400 });
     }
 
