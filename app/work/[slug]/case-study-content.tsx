@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { SiteNav } from "../../../components/site-nav";
-import { buildCaseStudyLinks } from "../../../lib/sanitize";
+import { buildCaseStudyResources } from "../../../lib/sanitize";
 import type { PublicProject, PublicSettings } from "../../../lib/types";
 
 interface CaseStudyContentProps {
@@ -32,16 +32,24 @@ export default function CaseStudyContent({
     (result) => result && hasText(result.metric) && hasText(result.label)
   );
   const techStack = (project.techStack ?? []).filter(hasText);
-  const docLinks = buildCaseStudyLinks({
+  const resources = buildCaseStudyResources({
     liveUrl: project.liveUrl,
     githubUrl: project.githubUrl,
     repository: project.repository,
     documentationUrl: project.documentationUrl,
     figmaUrl: project.figmaUrl,
     casePdfUrl: project.casePdfUrl,
+    videoUrl: project.videoUrl,
+    demoCredentials: project.demoCredentials,
+    clientWebsite: project.clientWebsite,
     additionalLinks: (project.additionalLinks ?? []).map((link) => ({
       label: link?.label,
       url: link?.url,
+    })),
+    resources: (project.resources ?? []).map((r) => ({
+      type: r?.type,
+      label: r?.label,
+      value: r?.value,
     })),
   });
 
@@ -55,7 +63,7 @@ export default function CaseStudyContent({
   if (process.length > 0) sections.push({ id: "cs-process", label: "Process" });
   if (results.length > 0) sections.push({ id: "cs-results", label: "Results" });
   if (techStack.length > 0) sections.push({ id: "cs-tech", label: "Technology" });
-  if (docLinks.length > 0) sections.push({ id: "cs-resources", label: "Resources" });
+  if (resources.length > 0) sections.push({ id: "cs-resources", label: "Resources" });
   if (gallery.length > 0) sections.push({ id: "cs-gallery", label: "Gallery" });
 
   return (
@@ -294,29 +302,42 @@ export default function CaseStudyContent({
           </section>
         )}
 
-        {docLinks.length > 0 && (
+        {resources.length > 0 && (
           <section id="cs-resources" className="cs-section">
             <div className="container">
               <div className="cs-section-head" data-case-reveal>
                 <p className="kicker">
-                  <span className="kicker-num">07</span> Resources
+                  <span className="kicker-num">
+                    {String(
+                      sections.findIndex((s) => s.id === "cs-resources") + 1
+                    ).padStart(2, "0")}
+                  </span>{" "}
+                  Resources
                 </p>
                 <span className="cs-section-rule" aria-hidden="true" />
               </div>
               <div className="cs-links-list">
-                {docLinks.map((link) => (
-                  <a
-                    key={`${link.label}-${link.href}`}
-                    href={link.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="cs-link-row"
-                    data-case-reveal
-                  >
-                    <span className="cs-link-label">{link.label}</span>
-                    <span className="cs-link-arrow" aria-hidden="true">↗</span>
-                  </a>
-                ))}
+                {resources.map((resource, idx) => {
+                  const isDownload = ['pdf', 'apk', 'zip', 'image', 'download', 'other'].includes(resource.type);
+                  const href = isDownload
+                    ? `/api/projects/${project.slug}/resources/${idx}`
+                    : resource.value;
+                  return (
+                    <a
+                      key={`${resource.label}-${idx}`}
+                      href={href}
+                      target={isDownload ? undefined : '_blank'}
+                      rel={isDownload ? undefined : 'noopener noreferrer'}
+                      className="cs-link-row"
+                      data-case-reveal
+                    >
+                      <span className="cs-link-label">{resource.label}</span>
+                      <span className="cs-link-arrow" aria-hidden="true">
+                        {isDownload ? '↓' : '↗'}
+                      </span>
+                    </a>
+                  );
+                })}
               </div>
             </div>
           </section>

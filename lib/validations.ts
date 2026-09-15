@@ -73,6 +73,12 @@ export const AdditionalLinkSchema = z.object({
   url: z.string().min(1).trim(),
 });
 
+export const ResourceSchema = z.object({
+  type: z.string().min(1).trim(),
+  label: z.string().min(1).trim(),
+  value: z.string().min(1).trim(),
+});
+
 export const ProjectSchema = z.object({
   slug: z
     .string()
@@ -112,6 +118,7 @@ export const ProjectSchema = z.object({
   gallery: z.array(z.string()).default([]),
   results: z.array(ResultSchema).default([]),
   additionalLinks: z.array(AdditionalLinkSchema).default([]),
+  resources: z.array(ResourceSchema).default([]),
   featured: z.boolean().default(false),
   published: z.boolean().default(true),
   order: z.number().default(0),

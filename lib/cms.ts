@@ -114,6 +114,15 @@ export const getPublicProjects = cache(async (): Promise<PublicProject[]> => {
         gallery: cleanStringArray(plain.gallery),
         results: cleanResults(plain.results),
         additionalLinks: cleanLinks(plain.additionalLinks),
+        resources: Array.isArray(plain.resources) ? plain.resources
+          .filter((r): r is { type: string; label: string; value: string } => 
+            r !== null && typeof r === 'object' && typeof (r as Record<string, unknown>).label === 'string' && typeof (r as Record<string, unknown>).value === 'string'
+          )
+          .map((r) => ({
+            type: String(r.type || 'link'),
+            label: String(r.label),
+            value: String(r.value),
+          })) : [],
         featured: plain.featured === true,
         published: plain.published !== false,
       };

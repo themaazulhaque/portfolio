@@ -266,4 +266,5 @@ tbody tr:hover td { background: var(--bg-2); }
   .table-wrap { font-size: 12px; }
   thead th { padding: 8px 10px; font-size: 10px; }
   tbody td { padding: 8px 10px; font-size: 12px; }
+  .resource-row { grid-template-columns: 1fr !important; }
 }

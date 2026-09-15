@@ -15,6 +15,9 @@ const ALLOWED_TYPES = new Set([
   'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/avif',
   'video/mp4', 'video/webm',
   'application/pdf',
+  'application/vnd.android.package-archive',
+  'application/zip',
+  'application/x-zip-compressed',
 ]);
 const SAFE_EXTENSIONS: Record<string, string> = {
   'image/jpeg': 'jpg',
@@ -25,6 +28,9 @@ const SAFE_EXTENSIONS: Record<string, string> = {
   'video/mp4': 'mp4',
   'video/webm': 'webm',
   'application/pdf': 'pdf',
+  'application/vnd.android.package-archive': 'apk',
+  'application/zip': 'zip',
+  'application/x-zip-compressed': 'zip',
 };
 
 export async function POST(request: NextRequest) {

@@ -251,8 +251,8 @@ export function ProjectsSection({ projects }: ProjectsSectionProps) {
                 style={{ cursor: hasLiveDemo ? "pointer" : "default" }}
               >
                 <div className="p-media">
-                  {project.image ? (
-                    <img src={project.image} alt={`${project.title} — ${project.cat}`} loading="lazy" />
+                  {(project.coverImage || project.image) ? (
+                    <img src={project.coverImage || project.image} alt={`${project.title} — ${project.cat}`} loading="lazy" />
                   ) : (
                     <div className="p-img-placeholder" aria-hidden="true" />
                   )}

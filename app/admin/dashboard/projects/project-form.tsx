@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useState, useEffect } from 'react';
+import { useActionState, useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createProject, updateProject, type ProjectActionState } from '@/app/actions/projects';
@@ -13,10 +13,33 @@ interface Props {
   projectId?: string;
 }
 
-interface LinkEntry {
+interface ResourceEntry {
+  type: string;
   label: string;
-  url: string;
+  value: string;
 }
+
+const RESOURCE_TYPES = [
+  { value: 'link', label: 'Link', inputType: 'url' },
+  { value: 'github', label: 'GitHub', inputType: 'url' },
+  { value: 'figma', label: 'Figma', inputType: 'url' },
+  { value: 'video', label: 'Video', inputType: 'url' },
+  { value: 'pdf', label: 'PDF', inputType: 'file' },
+  { value: 'apk', label: 'APK', inputType: 'file' },
+  { value: 'image', label: 'Image', inputType: 'file' },
+  { value: 'zip', label: 'ZIP', inputType: 'file' },
+  { value: 'download', label: 'Download', inputType: 'file' },
+  { value: 'documentation', label: 'Documentation', inputType: 'url' },
+  { value: 'other', label: 'Other', inputType: 'url' },
+];
+
+const RESOURCE_ACCEPT: Record<string, string> = {
+  pdf: '.pdf',
+  apk: '.apk',
+  image: 'image/*',
+  zip: '.zip',
+  download: '.pdf,.zip,.apk,.doc,.docx,.txt',
+};
 
 const init: ProjectActionState = {};
 
@@ -25,15 +48,16 @@ function toStringArray(value: unknown, fallback: string[] = []): string[] {
   return value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0);
 }
 
-function toLinkEntries(value: unknown): LinkEntry[] {
+function toResourceEntries(value: unknown): ResourceEntry[] {
   if (!Array.isArray(value)) return [];
   return value
-    .filter((link): link is { label?: unknown; url?: unknown } => !!link && typeof link === 'object')
-    .map((link) => ({
-      label: typeof link.label === 'string' ? link.label : '',
-      url: typeof link.url === 'string' ? link.url : '',
+    .filter((r): r is { type?: unknown; label?: unknown; value?: unknown } => !!r && typeof r === 'object')
+    .map((r) => ({
+      type: typeof r.type === 'string' ? r.type : 'link',
+      label: typeof r.label === 'string' ? r.label : '',
+      value: typeof r.value === 'string' ? r.value : '',
     }))
-    .filter((link) => link.label.trim().length > 0 && link.url.trim().length > 0);
+    .filter((r) => r.label.trim().length > 0 && r.value.trim().length > 0);
 }
 
 function toProcessSteps(value: unknown) {
@@ -66,7 +90,7 @@ export function ProjectForm({ project, projectId }: Props) {
   const safeChallenge = toStringArray(project?.challenge, ['']);
   const safeSolution = toStringArray(project?.solution, ['']);
   const safeGallery = toStringArray(project?.gallery);
-  const safeAdditionalLinks = toLinkEntries(project?.additionalLinks);
+  const safeResources = toResourceEntries(project?.resources);
   const safeProcess = toProcessSteps(project?.process);
   const safeResults = toResultEntries(project?.results);
 
@@ -76,16 +100,13 @@ export function ProjectForm({ project, projectId }: Props) {
 
   const [state, action, pending] = useActionState(boundAction, init);
 
-  // Tag inputs
   const [techStack, setTechStack] = useState<string[]>(safeTechStack);
   const [techInput, setTechInput] = useState('');
   const [overview, setOverview] = useState<string[]>(safeOverview);
   const [challenge, setChallenge] = useState<string[]>(safeChallenge);
   const [solution, setSolution] = useState<string[]>(safeSolution);
   const [gallery, setGallery] = useState<string[]>(safeGallery);
-  const [additionalLinks, setAdditionalLinks] = useState<LinkEntry[]>(() => safeAdditionalLinks);
-  const [linkLabelInput, setLinkLabelInput] = useState('');
-  const [linkUrlInput, setLinkUrlInput] = useState('');
+  const [resources, setResources] = useState<ResourceEntry[]>(safeResources);
 
   function addTech() {
     const v = techInput.trim();
@@ -94,20 +115,16 @@ export function ProjectForm({ project, projectId }: Props) {
   }
   function removeTech(t: string) { setTechStack(techStack.filter((x) => x !== t)); }
 
-  function addLink() {
-    const label = linkLabelInput.trim();
-    const url = linkUrlInput.trim();
-    if (label && url) {
-      setAdditionalLinks([...additionalLinks, { label, url }]);
-      setLinkLabelInput('');
-      setLinkUrlInput('');
-    }
+  function addResource() {
+    setResources([...resources, { type: 'link', label: '', value: '' }]);
   }
-  function removeLink(index: number) {
-    setAdditionalLinks(additionalLinks.filter((_, i) => i !== index));
+  function updateResource(index: number, field: keyof ResourceEntry, val: string) {
+    setResources(resources.map((r, i) => i === index ? { ...r, [field]: val } : r));
+  }
+  function removeResource(index: number) {
+    setResources(resources.filter((_, i) => i !== index));
   }
 
-  // success redirect
   useEffect(() => {
     if (state.success) {
       router.push('/admin/dashboard/projects');
@@ -119,13 +136,12 @@ export function ProjectForm({ project, projectId }: Props) {
       {state.error && <div className="alert alert-error">{state.error}</div>}
       {state.success && <div className="alert alert-success">Saved successfully!</div>}
 
-      {/* hidden JSON fields */}
       <input type="hidden" name="techStack" value={JSON.stringify(techStack)} />
       <input type="hidden" name="overview" value={JSON.stringify(overview.filter(Boolean))} />
       <input type="hidden" name="challenge" value={JSON.stringify(challenge.filter(Boolean))} />
       <input type="hidden" name="solution" value={JSON.stringify(solution.filter(Boolean))} />
       <input type="hidden" name="gallery" value={JSON.stringify(gallery)} />
-      <input type="hidden" name="additionalLinks" value={JSON.stringify(additionalLinks)} />
+      <input type="hidden" name="resources" value={JSON.stringify(resources.filter(r => r.label && r.value))} />
       <input type="hidden" name="process" value={JSON.stringify(safeProcess)} />
       <input type="hidden" name="results" value={JSON.stringify(safeResults)} />
 
@@ -179,120 +195,127 @@ export function ProjectForm({ project, projectId }: Props) {
         </div>
       </div>
 
-      {/* ─ URLS ─ */}
-      <div className="card" style={{ marginBottom: 16 }}>
-        <div className="card-header"><span className="card-title">Links & Resources (Optional)</span></div>
-        <div className="card-body">
-          <div className="form-grid">
-            <div className="field">
-              <label>Live Demo URL</label>
-              <input name="liveUrl" type="url" defaultValue={project?.liveUrl ?? ''} placeholder="https://..." />
-            </div>
-            <div className="field">
-              <label>Client Website</label>
-              <input name="clientWebsite" type="url" defaultValue={project?.clientWebsite ?? ''} placeholder="https://..." />
-            </div>
-          </div>
-          <div className="form-grid">
-            <div className="field">
-              <label>GitHub Repository</label>
-              <input name="githubUrl" type="url" defaultValue={project?.githubUrl} placeholder="https://github.com/..." />
-            </div>
-            <div className="field">
-              <label>Other Repository</label>
-              <input name="repository" type="url" defaultValue={project?.repository} placeholder="https://gitlab.com/..." />
-            </div>
-          </div>
-          <div className="form-grid">
-            <div className="field">
-              <label>Documentation URL</label>
-              <input name="documentationUrl" type="url" defaultValue={project?.documentationUrl} />
-            </div>
-            <div className="field">
-              <label>Figma URL</label>
-              <input name="figmaUrl" type="url" defaultValue={project?.figmaUrl} />
-            </div>
-          </div>
-          <div className="form-grid">
-            <div className="field">
-              <label>Video URL</label>
-              <input name="videoUrl" type="url" defaultValue={project?.videoUrl} />
-            </div>
-            <div className="field">
-              <label>Demo Credentials</label>
-              <input name="demoCredentials" defaultValue={project?.demoCredentials} placeholder="user / pass" />
-            </div>
-          </div>
-          <div className="field" style={{ maxWidth: '50%' }}>
-            <MediaPicker name="casePdfUrl" label="Case Study PDF" value={project?.casePdfUrl} accept=".pdf" hint="PDF files only" />
-          </div>
-        </div>
-      </div>
-
       {/* ─ MEDIA ─ */}
       <div className="card" style={{ marginBottom: 16 }}>
         <div className="card-header"><span className="card-title">Media</span></div>
         <div className="card-body">
-          <div className="form-grid">
-            <MediaPicker name="coverImage" label="Cover Image" value={project?.coverImage} />
-            <MediaPicker name="thumbnailImage" label="Thumbnail Image" value={project?.thumbnailImage} />
-          </div>
-          <div className="form-grid">
-            <MediaPicker name="image" label="Main Image" value={project?.image} />
-            <MediaPicker name="logoImage" label="Logo Image" value={project?.logoImage} />
-          </div>
-          <div className="form-grid">
-            <MediaPicker name="featureBanner" label="Feature Banner" value={project?.featureBanner} />
-            <MediaPicker name="desktopScreenshot" label="Desktop Screenshot" value={project?.desktopScreenshot} />
-          </div>
-          <div className="form-grid">
-            <MediaPicker name="tabletScreenshot" label="Tablet Screenshot" value={project?.tabletScreenshot} />
-            <MediaPicker name="mobileScreenshot" label="Mobile Screenshot" value={project?.mobileScreenshot} />
-          </div>
+          <MediaPicker name="coverImage" label="Cover Image" value={project?.coverImage || project?.image} />
 
-          {/* Gallery */}
           <GalleryPicker
             label="Gallery Images"
             value={safeGallery}
             onChange={setGallery}
-            hint="JPEG, PNG, WebP · Max 10 MB each"
+            hint="JPEG, PNG, WebP · Max 10 MB each · Any aspect ratio supported"
           />
         </div>
       </div>
 
-      {/* ─ ADDITIONAL LINKS ─ */}
+      {/* ─ RESOURCES ─ */}
       <div className="card" style={{ marginBottom: 16 }}>
-        <div className="card-header"><span className="card-title">Additional Links</span></div>
+        <div className="card-header">
+          <span className="card-title">Resources</span>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={addResource}>+ Add Resource</button>
+        </div>
         <div className="card-body">
-          <div className="field">
-            <label>Custom Resource Links</label>
-            <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-              <input
-                value={linkLabelInput}
-                onChange={(e) => setLinkLabelInput(e.target.value)}
-                placeholder="Label (e.g. Figma, Docs)"
-                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addLink(); } }}
-                style={{ flex: 1, background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', color: 'var(--text)', padding: '9px 12px', outline: 'none', fontFamily: 'var(--font)', fontSize: 14 }}
-              />
-              <input
-                value={linkUrlInput}
-                onChange={(e) => setLinkUrlInput(e.target.value)}
-                placeholder="https://..."
-                type="url"
-                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addLink(); } }}
-                style={{ flex: 2, background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', color: 'var(--text)', padding: '9px 12px', outline: 'none', fontFamily: 'var(--font)', fontSize: 14 }}
-              />
-              <button type="button" className="btn btn-secondary" onClick={addLink}>Add</button>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {additionalLinks.map((link, i) => (
-                <div key={`${link.label}-${i}`} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--bg-3)', border: '1px solid var(--border)', borderRadius: 6, padding: '6px 10px', fontSize: 13 }}>
-                  <span style={{ fontWeight: 500, color: 'var(--text)' }}>{link.label}</span>
-                  <span style={{ color: 'var(--text-2)', fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{link.url}</span>
-                  <button type="button" onClick={() => removeLink(i)} style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', fontSize: 14 }}>×</button>
+          {resources.length === 0 && (
+            <p style={{ fontSize: 13, color: 'var(--text-3)', marginBottom: 8 }}>No resources added. Click "+ Add Resource" to add links, files, or downloads.</p>
+          )}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {resources.map((resource, i) => {
+              const typeConfig = RESOURCE_TYPES.find(t => t.value === resource.type) || RESOURCE_TYPES[0];
+              const isFileType = typeConfig.inputType === 'file';
+              return (
+                <div key={i} style={{
+                  display: 'grid',
+                  gridTemplateColumns: '140px 1fr 2fr auto',
+                  gap: 8,
+                  alignItems: 'start',
+                  padding: '12px',
+                  background: 'var(--bg-2)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 'var(--radius)',
+                }}>
+                  <select
+                    value={resource.type}
+                    onChange={(e) => updateResource(i, 'type', e.target.value)}
+                    style={{
+                      background: 'var(--bg-3)',
+                      border: '1px solid var(--border)',
+                      borderRadius: 'var(--radius)',
+                      color: 'var(--text)',
+                      padding: '8px 10px',
+                      fontSize: 13,
+                      fontFamily: 'var(--font)',
+                      outline: 'none',
+                    }}
+                  >
+                    {RESOURCE_TYPES.map(t => (
+                      <option key={t.value} value={t.value}>{t.label}</option>
+                    ))}
+                  </select>
+                  <input
+                    value={resource.label}
+                    onChange={(e) => updateResource(i, 'label', e.target.value)}
+                    placeholder="Label (e.g. Live Demo, Case Study)"
+                    style={{
+                      background: 'var(--bg-3)',
+                      border: '1px solid var(--border)',
+                      borderRadius: 'var(--radius)',
+                      color: 'var(--text)',
+                      padding: '8px 10px',
+                      fontSize: 13,
+                      fontFamily: 'var(--font)',
+                      outline: 'none',
+                    }}
+                  />
+                  {isFileType ? (
+                    <ResourceFileUpload
+                      type={resource.type}
+                      accept={RESOURCE_ACCEPT[resource.type] || '*'}
+                      value={resource.value}
+                      onChange={(val) => updateResource(i, 'value', val)}
+                    />
+                  ) : (
+                    <input
+                      value={resource.value}
+                      onChange={(e) => updateResource(i, 'value', e.target.value)}
+                      placeholder="https://..."
+                      type="url"
+                      style={{
+                        background: 'var(--bg-3)',
+                        border: '1px solid var(--border)',
+                        borderRadius: 'var(--radius)',
+                        color: 'var(--text)',
+                        padding: '8px 10px',
+                        fontSize: 13,
+                        fontFamily: 'var(--font)',
+                        outline: 'none',
+                      }}
+                    />
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => removeResource(i)}
+                    style={{
+                      background: 'none',
+                      border: '1px solid rgba(239,68,68,0.3)',
+                      borderRadius: 'var(--radius)',
+                      color: 'var(--danger)',
+                      cursor: 'pointer',
+                      fontSize: 14,
+                      width: 32,
+                      height: 32,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                    title="Remove resource"
+                  >
+                    ×
+                  </button>
                 </div>
-              ))}
-            </div>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -386,5 +409,93 @@ export function ProjectForm({ project, projectId }: Props) {
         <Link href="/admin/dashboard/projects" className="btn btn-secondary">Cancel</Link>
       </div>
     </form>
+  );
+}
+
+function ResourceFileUpload({ type, accept, value, onChange }: { type: string; accept: string; value: string; onChange: (url: string) => void }) {
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState('');
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleUpload = async (file: File) => {
+    setUploading(true);
+    setError('');
+    const fd = new FormData();
+    fd.append('file', file);
+    try {
+      const res = await fetch('/api/admin/media/upload', { method: 'POST', body: fd });
+      const data = await res.json() as { media?: { url: string }; error?: string };
+      if (data.media) {
+        onChange(data.media.url);
+      } else {
+        setError(data.error ?? 'Upload failed');
+      }
+    } catch {
+      setError('Upload failed');
+    }
+    setUploading(false);
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
+      <input type="hidden" value={value} />
+      {value ? (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          padding: '6px 10px',
+          background: 'var(--bg-3)',
+          border: '1px solid var(--border)',
+          borderRadius: 'var(--radius)',
+          fontSize: 12,
+          color: 'var(--text-2)',
+        }}>
+          <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {value.split('/').pop()}
+          </span>
+          <button
+            type="button"
+            onClick={() => onChange('')}
+            style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', fontSize: 12 }}
+          >
+            ×
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => fileRef.current?.click()}
+          disabled={uploading}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 6,
+            padding: '8px 10px',
+            background: 'var(--bg-3)',
+            border: '1px dashed var(--border)',
+            borderRadius: 'var(--radius)',
+            color: 'var(--text-2)',
+            cursor: 'pointer',
+            fontSize: 12,
+            fontFamily: 'var(--font)',
+          }}
+        >
+          {uploading ? 'Uploading…' : `Upload ${type.toUpperCase()}`}
+        </button>
+      )}
+      {error && <span style={{ fontSize: 11, color: 'var(--danger)' }}>{error}</span>}
+      <input
+        ref={fileRef}
+        type="file"
+        accept={accept}
+        style={{ display: 'none' }}
+        onChange={(e) => {
+          if (e.target.files?.length) handleUpload(e.target.files[0]);
+          e.target.value = '';
+        }}
+      />
+    </div>
   );
 }
