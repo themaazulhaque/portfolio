@@ -10,16 +10,19 @@ import { isCloudinaryConfigured, uploadToCloudinary } from '@/lib/cloudinary';
 import { isValidOrigin } from '@/lib/csrf';
 
 const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads');
-const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
+const MAX_SIZE = 50 * 1024 * 1024; // 50 MB — accommodates APKs
+
 const ALLOWED_TYPES = new Set([
   'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/avif',
   'video/mp4', 'video/webm',
   'application/pdf',
   'application/vnd.android.package-archive',
+  'application/octet-stream',
   'application/zip',
   'application/x-zip-compressed',
 ]);
-const SAFE_EXTENSIONS: Record<string, string> = {
+
+const MIME_TO_EXT: Record<string, string> = {
   'image/jpeg': 'jpg',
   'image/png': 'png',
   'image/gif': 'gif',
@@ -33,37 +36,71 @@ const SAFE_EXTENSIONS: Record<string, string> = {
   'application/x-zip-compressed': 'zip',
 };
 
+function guessExtFromName(name: string): string | null {
+  const dot = name.lastIndexOf('.');
+  if (dot === -1) return null;
+  return name.slice(dot + 1).toLowerCase();
+}
+
+function resolveExtension(mimeType: string, fileName: string): string {
+  if (MIME_TO_EXT[mimeType]) return MIME_TO_EXT[mimeType];
+  const fromName = guessExtFromName(fileName);
+  if (fromName) return fromName;
+  return 'bin';
+}
+
+function safeFileName(name: string): string {
+  return name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 120);
+}
+
 export async function POST(request: NextRequest) {
-  // Origin check to prevent CSRF
   if (!isValidOrigin(request)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  // Auth check
   const token = request.cookies.get('admin_session')?.value;
   if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const session = await decrypt(token);
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+  const contentType = request.headers.get('content-type') || 'unknown';
+  const contentLength = request.headers.get('content-length') || 'unknown';
+  console.log(`[upload] POST /api/admin/media/upload — Content-Type: ${contentType}, Content-Length: ${contentLength}`);
+
   let formData: FormData;
   try {
     formData = await request.formData();
   } catch (err) {
-    console.error('[upload] formData() failed:', err instanceof Error ? err.message : err);
-    return NextResponse.json({ error: 'Invalid form data' }, { status: 400 });
+    console.error('[upload] formData() parse failed:', err instanceof Error ? err.message : err);
+    return NextResponse.json(
+      { error: `Invalid multipart form data: ${err instanceof Error ? err.message : 'parse error'}` },
+      { status: 400 },
+    );
   }
 
   const file = formData.get('file');
   if (!(file instanceof File)) {
+    const fields = Array.from(formData.keys());
+    console.error('[upload] No file field. Fields present:', fields);
     return NextResponse.json({ error: 'No file provided' }, { status: 400 });
   }
 
-  if (!ALLOWED_TYPES.has(file.type)) {
-    return NextResponse.json({ error: 'File type not allowed' }, { status: 400 });
+  console.log(`[upload] File: name=${file.name}, type=${file.type}, size=${file.size}`);
+
+  const effectiveMime = file.type || 'application/octet-stream';
+
+  if (!ALLOWED_TYPES.has(effectiveMime)) {
+    console.error(`[upload] Rejected MIME: ${effectiveMime}`);
+    return NextResponse.json({ error: 'Unsupported file type' }, { status: 415 });
+  }
+
+  if (file.size === 0) {
+    return NextResponse.json({ error: 'Empty file' }, { status: 400 });
   }
 
   if (file.size > MAX_SIZE) {
-    return NextResponse.json({ error: 'File exceeds 10 MB limit' }, { status: 400 });
+    console.error(`[upload] File too large: ${file.size} bytes`);
+    return NextResponse.json({ error: 'File is too large (max 50 MB)' }, { status: 413 });
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());
@@ -72,8 +109,8 @@ export async function POST(request: NextRequest) {
 
   if (isCloudinaryConfigured()) {
     try {
-      const resourceType = file.type.startsWith('image/') ? 'image'
-        : file.type.startsWith('video/') ? 'video'
+      const resourceType = effectiveMime.startsWith('image/') ? 'image'
+        : effectiveMime.startsWith('video/') ? 'video'
         : 'raw';
       const result = await uploadToCloudinary(buffer, {
         folder: 'portfolio/media',
@@ -81,42 +118,50 @@ export async function POST(request: NextRequest) {
       });
       url = result.secure_url;
       filename = result.public_id;
-    } catch {
-      return NextResponse.json({ error: 'Cloudinary upload failed' }, { status: 500 });
+      console.log(`[upload] Cloudinary OK: ${url}`);
+    } catch (cloudErr) {
+      console.error('[upload] Cloudinary failed:', cloudErr instanceof Error ? cloudErr.message : cloudErr);
+      return NextResponse.json({ error: 'Cloud storage upload failed' }, { status: 500 });
     }
   } else if (process.env.NODE_ENV === 'production') {
-    return NextResponse.json({ error: 'Cloudinary production storage is not configured. Contact the administrator.' }, { status: 500 });
+    console.error('[upload] No Cloudinary in production');
+    return NextResponse.json({ error: 'Cloud storage is not configured. Contact the administrator.' }, { status: 500 });
   } else {
-    // Fallback to local filesystem for development only
-    const ext = SAFE_EXTENSIONS[file.type] ?? 'bin';
+    const ext = resolveExtension(effectiveMime, file.name);
     filename = `${uuidv4()}.${ext}`;
     const uploadPath = path.join(UPLOAD_DIR, filename);
     try {
       await mkdir(UPLOAD_DIR, { recursive: true });
       await writeFile(uploadPath, buffer);
-    } catch {
+      console.log(`[upload] Local OK: ${uploadPath}`);
+    } catch (fsErr) {
+      console.error('[upload] Filesystem write failed:', fsErr instanceof Error ? fsErr.message : fsErr);
       return NextResponse.json({ error: 'Failed to save file' }, { status: 500 });
     }
     url = `/uploads/${filename}`;
   }
 
-  const mediaType = file.type.startsWith('image/') ? 'image' : file.type.startsWith('video/') ? 'video' : 'document';
+  const mediaType = effectiveMime.startsWith('image/') ? 'image'
+    : effectiveMime.startsWith('video/') ? 'video'
+    : 'document';
 
   try {
     await connectDB();
     const media = await Media.create({
       filename,
       originalName: file.name,
-      mimeType: file.type,
+      mimeType: effectiveMime,
       size: file.size,
       url,
       type: mediaType,
     });
 
-    await auditLog({ action: 'UPLOAD', resource: 'media', resourceId: media._id.toString(), details: file.name });
+    await auditLog({ action: 'UPLOAD', resource: 'media', resourceId: media._id.toString(), details: safeFileName(file.name) });
 
+    console.log(`[upload] Saved media record: ${media._id} → ${url}`);
     return NextResponse.json({ media: JSON.parse(JSON.stringify(media)) });
-  } catch {
+  } catch (dbErr) {
+    console.error('[upload] Database error:', dbErr instanceof Error ? dbErr.message : dbErr);
     return NextResponse.json({ error: 'Database error' }, { status: 500 });
   }
 }

@@ -5,6 +5,62 @@ import { ImageSequenceHero } from "./image-sequence-hero";
 
 const TIMEOUT_MS = 12000;
 const FRAMES_BEFORE_READY = 8;
+const HELLO_HOLD_MS = 1200;
+
+function HelloIntro({ onDone }: { onDone: () => void }) {
+  const [phase, setPhase] = useState<"enter" | "hold" | "exit">("enter");
+
+  useEffect(() => {
+    const t1 = setTimeout(() => setPhase("hold"), 100);
+    const t2 = setTimeout(() => setPhase("exit"), 100 + HELLO_HOLD_MS);
+    const t3 = setTimeout(onDone, 100 + HELLO_HOLD_MS + 600);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+  }, [onDone]);
+
+  return (
+    <div
+      className="hello-intro"
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 10000,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "#0a0a0a",
+        opacity: phase === "exit" ? 0 : 1,
+        transition: "opacity 0.5s cubic-bezier(0.4,0,0.2,1)",
+        pointerEvents: phase === "exit" ? "none" : "auto",
+      }}
+    >
+      <style>{`
+        @keyframes helloFadeIn {
+          from { opacity: 0; transform: translateY(8px) scale(0.97); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          @keyframes helloFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+          }
+        }
+      `}</style>
+      <span
+        style={{
+          fontFamily: '"Cinzel", "Georgia", serif',
+          fontSize: "clamp(36px, 8vw, 64px)",
+          fontWeight: 400,
+          letterSpacing: "0.18em",
+          color: "#ffffff",
+          animation: "helloFadeIn 0.5s cubic-bezier(0.16,1,0.3,1) both",
+          userSelect: "none",
+        }}
+      >
+        HELLO
+      </span>
+    </div>
+  );
+}
 
 function HeroLoaderOverlay({ progress }: { progress: number }) {
   const pct = Math.round(progress * 100);
@@ -82,11 +138,14 @@ export function HeroLoaderWrapper({
   const [showLoader, setShowLoader] = useState(true);
   const [ready, setReady] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [helloDone, setHelloDone] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>(null);
 
   useEffect(() => {
     const mq = window.matchMedia?.("(prefers-reduced-motion: reduce)");
     setReducedMotion(mq?.matches ?? false);
+    setIsMobile(window.innerWidth < 768);
   }, []);
 
   const handleProgress = useCallback((loaded: number, total: number) => {
@@ -117,6 +176,17 @@ export function HeroLoaderWrapper({
     };
   }, []);
 
+  const lockBody = (isMobile && !reducedMotion && !helloDone) || (showLoader && !reducedMotion);
+
+  useEffect(() => {
+    if (lockBody) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [lockBody]);
+
   if (reducedMotion) {
     return (
       <ImageSequenceHero
@@ -129,7 +199,12 @@ export function HeroLoaderWrapper({
 
   return (
     <>
-      {showLoader && <HeroLoaderOverlay progress={progress} />}
+      {isMobile && !helloDone && (
+        <HelloIntro onDone={() => setHelloDone(true)} />
+      )}
+      {showLoader && (helloDone || !isMobile) && (
+        <HeroLoaderOverlay progress={progress} />
+      )}
       <div
         style={{
           opacity: ready ? 1 : 0,

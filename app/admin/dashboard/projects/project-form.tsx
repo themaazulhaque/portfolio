@@ -416,17 +416,21 @@ function ResourceFileUpload({ type, accept, value, onChange }: { type: string; a
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const xhrRef = useRef<XMLHttpRequest | null>(null);
 
   const handleUpload = (file: File) => {
     setUploading(true);
     setProgress(0);
     setError('');
+    setSuccess(false);
 
     const fd = new FormData();
     fd.append('file', file);
 
     const xhr = new XMLHttpRequest();
+    xhrRef.current = xhr;
     xhr.open('POST', '/api/admin/media/upload');
 
     xhr.upload.addEventListener('progress', (e) => {
@@ -436,10 +440,18 @@ function ResourceFileUpload({ type, accept, value, onChange }: { type: string; a
     });
 
     xhr.addEventListener('load', () => {
+      xhrRef.current = null;
       try {
         const data = JSON.parse(xhr.responseText) as { media?: { url: string }; error?: string };
         if (xhr.status >= 200 && xhr.status < 300 && data.media) {
+          setSuccess(true);
           onChange(data.media.url);
+        } else if (xhr.status === 413) {
+          setError('File is too large');
+        } else if (xhr.status === 415) {
+          setError('Unsupported file type');
+        } else if (xhr.status === 401 || xhr.status === 403) {
+          setError('Session expired — please refresh');
         } else {
           setError(data.error ?? `Upload failed (${xhr.status})`);
         }
@@ -450,16 +462,22 @@ function ResourceFileUpload({ type, accept, value, onChange }: { type: string; a
     });
 
     xhr.addEventListener('error', () => {
-      setError('Upload failed — network error');
+      xhrRef.current = null;
+      setError('Network error — please try again');
       setUploading(false);
     });
 
     xhr.addEventListener('abort', () => {
+      xhrRef.current = null;
       setError('');
       setUploading(false);
     });
 
     xhr.send(fd);
+  };
+
+  const cancelUpload = () => {
+    xhrRef.current?.abort();
   };
 
   return (
@@ -491,8 +509,8 @@ function ResourceFileUpload({ type, accept, value, onChange }: { type: string; a
       ) : (
         <button
           type="button"
-          onClick={() => fileRef.current?.click()}
-          disabled={uploading}
+          onClick={() => uploading ? cancelUpload() : fileRef.current?.click()}
+          disabled={false}
           style={{
             position: 'relative',
             display: 'flex',
@@ -500,14 +518,15 @@ function ResourceFileUpload({ type, accept, value, onChange }: { type: string; a
             justifyContent: 'center',
             gap: 6,
             padding: '8px 10px',
-            background: 'var(--bg-3)',
-            border: '1px dashed var(--border)',
+            background: success ? 'rgba(34,197,94,0.1)' : 'var(--bg-3)',
+            border: `1px dashed ${success ? 'rgba(34,197,94,0.4)' : error ? 'rgba(239,68,68,0.4)' : 'var(--border)'}`,
             borderRadius: 'var(--radius)',
-            color: 'var(--text-2)',
+            color: success ? 'rgb(34,197,94)' : error ? 'var(--danger)' : 'var(--text-2)',
             cursor: 'pointer',
             fontSize: 12,
             fontFamily: 'var(--font)',
             overflow: 'hidden',
+            transition: 'border-color 0.2s, color 0.2s, background 0.2s',
           }}
         >
           {uploading && (
@@ -518,12 +537,19 @@ function ResourceFileUpload({ type, accept, value, onChange }: { type: string; a
               bottom: 0,
               width: `${progress}%`,
               background: 'rgba(255,255,255,0.06)',
-              transition: 'width 0.2s ease',
+              transition: 'width 0.15s ease',
               pointerEvents: 'none',
             }} />
           )}
           <span style={{ position: 'relative' }}>
-            {uploading ? `Uploading ${progress}%…` : `Upload ${type.toUpperCase()}`}
+            {uploading
+              ? `Uploading ${progress}%…`
+              : success
+                ? 'Upload complete'
+                : error
+                  ? 'Retry upload'
+                  : `Upload ${type.toUpperCase()}`
+            }
           </span>
         </button>
       )}

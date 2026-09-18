@@ -20,7 +20,7 @@ export async function generateMetadata(): Promise<Metadata> {
     settings.seoDescription ||
     `${name} is a software developer and full-stack engineer based in Delhi, India. Specializing in React, Next.js, React Native, Node.js, and Python. View projects, case studies, and experience.`;
 
-  const ogImage = settings.ogImageUrl || `${PRODUCTION_URL}/uploads/6561a428-d918-4e1a-bfbb-faebbf7e10cb.png`;
+  const ogImage = settings.ogImageUrl || `${PRODUCTION_URL}/favicon.svg`;
 
   const sameAs = socialLinks
     .filter((link) => link.visible && link.url)
@@ -145,7 +145,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
         {settings.faviconUrl ? (
           <link rel="icon" href={settings.faviconUrl} />
         ) : (
-          <link rel="icon" href="/favicon.ico" sizes="any" />
+          <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         )}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
@@ -154,7 +154,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
           rel="stylesheet"
         />
         <link rel="manifest" href="/manifest.json" />
-        <link rel="apple-touch-icon" href={settings.faviconUrl || "/uploads/c9639286-dcbc-43da-aef4-8d6bbf1e7823.png"} />
+        <link rel="apple-touch-icon" href={settings.faviconUrl || "/favicon.svg"} />
         <meta name="theme-color" content="#060608" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
