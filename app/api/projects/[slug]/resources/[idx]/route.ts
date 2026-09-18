@@ -93,15 +93,43 @@ export async function GET(
       return NextResponse.json({ error: 'This resource is not a downloadable file' }, { status: 400 });
     }
 
-    // Fetch the file from storage
-    const response = await fetch(fileUrl);
+    console.log(`[download] Proxying ${fileType} file: ${fileUrl.substring(0, 120)}`);
+
+    // Fetch the file from storage with redirect following
+    const response = await fetch(fileUrl, {
+      redirect: 'follow',
+      headers: { 'Accept': '*/*' },
+    });
+
     if (!response.ok) {
-      return NextResponse.json({ error: 'Failed to fetch file' }, { status: 502 });
+      console.error(`[download] Upstream fetch failed: ${response.status} ${response.statusText} for ${fileUrl.substring(0, 120)}`);
+      return NextResponse.json({ error: `Failed to fetch file (${response.status})` }, { status: 502 });
+    }
+
+    const upstreamType = response.headers.get('content-type') || '';
+    console.log(`[download] Upstream response: ${response.status}, Content-Type: ${upstreamType}`);
+
+    // Check if upstream returned HTML (error page) instead of the actual file
+    if (upstreamType.includes('text/html')) {
+      console.error(`[download] Upstream returned HTML instead of file for ${fileUrl.substring(0, 120)}`);
+      return NextResponse.json({ error: 'File not available at storage URL' }, { status: 502 });
     }
 
     const fileBuffer = await response.arrayBuffer();
-    const contentType = getMimeFromUrl(fileUrl);
+    if (fileBuffer.byteLength === 0) {
+      console.error(`[download] Upstream returned empty file for ${fileUrl.substring(0, 120)}`);
+      return NextResponse.json({ error: 'File is empty' }, { status: 502 });
+    }
+
+    // Use the resource type to determine MIME if URL-based detection is ambiguous
+    let contentType = getMimeFromUrl(fileUrl);
+    if (fileType === 'apk' && contentType !== 'application/vnd.android.package-archive') {
+      contentType = 'application/vnd.android.package-archive';
+    }
+
     const filename = getFilenameFromUrl(fileUrl, label);
+
+    console.log(`[download] Serving ${filename} (${fileBuffer.byteLength} bytes, ${contentType})`);
 
     return new NextResponse(fileBuffer, {
       status: 200,
@@ -112,7 +140,8 @@ export async function GET(
         'Cache-Control': 'public, max-age=31536000, immutable',
       },
     });
-  } catch {
+  } catch (err) {
+    console.error('[download] Route error:', err instanceof Error ? err.message : err);
     return NextResponse.json({ error: 'Download failed' }, { status: 500 });
   }
 }

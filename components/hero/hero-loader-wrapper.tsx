@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { ImageSequenceHero } from "./image-sequence-hero";
+import { ScrollTrigger } from "../../lib/gsap";
 
 const TIMEOUT_MS = 12000;
 const FRAMES_BEFORE_READY = 8;
@@ -177,15 +178,21 @@ export function HeroLoaderWrapper({
   }, []);
 
   const lockBody = (isMobile && !reducedMotion && !helloDone) || (showLoader && !reducedMotion);
+  const prevLockRef = useRef(false);
 
   useEffect(() => {
     if (lockBody) {
       document.body.style.overflow = "hidden";
-    } else {
+    } else if (prevLockRef.current) {
       document.body.style.overflow = "";
+      requestAnimationFrame(() => ScrollTrigger.refresh());
     }
-    return () => { document.body.style.overflow = ""; };
+    prevLockRef.current = lockBody;
   }, [lockBody]);
+
+  useEffect(() => {
+    return () => { document.body.style.overflow = ""; };
+  }, []);
 
   if (reducedMotion) {
     return (
