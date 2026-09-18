@@ -48,7 +48,8 @@ export async function POST(request: NextRequest) {
   let formData: FormData;
   try {
     formData = await request.formData();
-  } catch {
+  } catch (err) {
+    console.error('[upload] formData() failed:', err instanceof Error ? err.message : err);
     return NextResponse.json({ error: 'Invalid form data' }, { status: 400 });
   }
 

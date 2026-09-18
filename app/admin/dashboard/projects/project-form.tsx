@@ -414,26 +414,52 @@ export function ProjectForm({ project, projectId }: Props) {
 
 function ResourceFileUpload({ type, accept, value, onChange }: { type: string; accept: string; value: string; onChange: (url: string) => void }) {
   const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [error, setError] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const handleUpload = async (file: File) => {
+  const handleUpload = (file: File) => {
     setUploading(true);
+    setProgress(0);
     setError('');
+
     const fd = new FormData();
     fd.append('file', file);
-    try {
-      const res = await fetch('/api/admin/media/upload', { method: 'POST', body: fd });
-      const data = await res.json() as { media?: { url: string }; error?: string };
-      if (data.media) {
-        onChange(data.media.url);
-      } else {
-        setError(data.error ?? 'Upload failed');
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/api/admin/media/upload');
+
+    xhr.upload.addEventListener('progress', (e) => {
+      if (e.lengthComputable) {
+        setProgress(Math.round((e.loaded / e.total) * 100));
       }
-    } catch {
-      setError('Upload failed');
-    }
-    setUploading(false);
+    });
+
+    xhr.addEventListener('load', () => {
+      try {
+        const data = JSON.parse(xhr.responseText) as { media?: { url: string }; error?: string };
+        if (xhr.status >= 200 && xhr.status < 300 && data.media) {
+          onChange(data.media.url);
+        } else {
+          setError(data.error ?? `Upload failed (${xhr.status})`);
+        }
+      } catch {
+        setError('Upload failed — invalid response');
+      }
+      setUploading(false);
+    });
+
+    xhr.addEventListener('error', () => {
+      setError('Upload failed — network error');
+      setUploading(false);
+    });
+
+    xhr.addEventListener('abort', () => {
+      setError('');
+      setUploading(false);
+    });
+
+    xhr.send(fd);
   };
 
   return (
@@ -468,6 +494,7 @@ function ResourceFileUpload({ type, accept, value, onChange }: { type: string; a
           onClick={() => fileRef.current?.click()}
           disabled={uploading}
           style={{
+            position: 'relative',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -480,9 +507,24 @@ function ResourceFileUpload({ type, accept, value, onChange }: { type: string; a
             cursor: 'pointer',
             fontSize: 12,
             fontFamily: 'var(--font)',
+            overflow: 'hidden',
           }}
         >
-          {uploading ? 'Uploading…' : `Upload ${type.toUpperCase()}`}
+          {uploading && (
+            <span style={{
+              position: 'absolute',
+              left: 0,
+              top: 0,
+              bottom: 0,
+              width: `${progress}%`,
+              background: 'rgba(255,255,255,0.06)',
+              transition: 'width 0.2s ease',
+              pointerEvents: 'none',
+            }} />
+          )}
+          <span style={{ position: 'relative' }}>
+            {uploading ? `Uploading ${progress}%…` : `Upload ${type.toUpperCase()}`}
+          </span>
         </button>
       )}
       {error && <span style={{ fontSize: 11, color: 'var(--danger)' }}>{error}</span>}

@@ -1,4 +1,4 @@
-import { ImageSequenceHero } from "../components/hero/image-sequence-hero";
+import { HeroLoaderWrapper } from "../components/hero/hero-loader-wrapper";
 import { SiteNav } from "../components/site-nav";
 import { AboutSection } from "../components/about";
 import { ProjectsSection } from "../components/projects";
@@ -35,8 +35,7 @@ export default async function Page() {
     <>
       <SiteNav name={settings.name} email={settings.email} availability={settings.availability} />
       <main>
-        {/* Existing cinematic Hero — untouched. Sections begin below it. */}
-        <ImageSequenceHero name={settings.name} title={settings.title} availability={settings.availability} />
+        <HeroLoaderWrapper name={settings.name} title={settings.title} availability={settings.availability} />
         <AboutSection
           name={settings.name}
           location={settings.location}

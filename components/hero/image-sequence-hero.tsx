@@ -49,11 +49,15 @@ function calculateCoverRect(
 export function ImageSequenceHero({
   name,
   title,
-  availability
+  availability,
+  onProgress,
+  onReady,
 }: {
   name?: string;
   title?: string;
   availability?: string;
+  onProgress?: (loaded: number, total: number) => void;
+  onReady?: () => void;
 }) {
   const stageRef = useRef<HTMLElement | null>(null);
   const viewportRef = useRef<HTMLDivElement | null>(null);
@@ -80,6 +84,11 @@ export function ImageSequenceHero({
     const loadedMap = new Map<number, FrameAsset>();
     const pendingLoads = new Set<number>();
     const loadQueue: number[] = [];
+    let loadedCount = 0;
+
+    const reportProgress = () => {
+      onProgress?.(loadedCount, FRAME_COUNT);
+    };
 
     // Canvas scaling & DPR setup
     let cssWidth = 0;
@@ -214,6 +223,9 @@ export function ImageSequenceHero({
               return;
             }
             loadedMap.set(fIdx, asset);
+            loadedCount++;
+            reportProgress();
+            if (fIdx === 1) onReady?.();
             if (fIdx === currentTargetFrame) {
               requestFrameDraw(fIdx);
             }
@@ -244,6 +256,9 @@ export function ImageSequenceHero({
       }
       loadedMap.set(1, asset);
       pendingLoads.delete(1);
+      loadedCount++;
+      reportProgress();
+      onReady?.();
       requestFrameDraw(1);
       processQueue();
     });
