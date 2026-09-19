@@ -219,6 +219,8 @@ export function HeroLoaderWrapper({
     };
   }, []);
 
+  const handleHelloDone = useCallback(() => setHelloDone(true), []);
+
   const lockBody = (isMobile && !reducedMotion && !helloDone) || (showLoader && !reducedMotion);
   const prevLockRef = useRef(false);
 
@@ -255,7 +257,7 @@ export function HeroLoaderWrapper({
   return (
     <>
       {isMobile && !helloDone && (
-        <HelloSVG onDone={() => setHelloDone(true)} />
+        <HelloSVG onDone={handleHelloDone} />
       )}
       {showLoader && (helloDone || !isMobile) && (
         <HeroLoaderOverlay progress={progress} />
