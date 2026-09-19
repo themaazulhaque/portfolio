@@ -181,12 +181,14 @@ export function HeroLoaderWrapper({
   const [reducedMotion, setReducedMotion] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [helloDone, setHelloDone] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>(null);
 
   useEffect(() => {
     const mq = window.matchMedia?.("(prefers-reduced-motion: reduce)");
     setReducedMotion(mq?.matches ?? false);
     setIsMobile(window.innerWidth < 768);
+    setHydrated(true);
   }, []);
 
   const handleProgress = useCallback((loaded: number, total: number) => {
@@ -241,6 +243,12 @@ export function HeroLoaderWrapper({
         title={title}
         availability={availability}
       />
+    );
+  }
+
+  if (!hydrated) {
+    return (
+      <div style={{ position: "fixed", inset: 0, zIndex: 10000, background: "#0a0a0a" }} />
     );
   }
 
