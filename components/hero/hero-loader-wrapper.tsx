@@ -6,16 +6,16 @@ import { ScrollTrigger } from "../../lib/gsap";
 
 const TIMEOUT_MS = 12000;
 const FRAMES_BEFORE_READY = 8;
-const HELLO_DRAW_MS = 1200;
-const HELLO_HOLD_MS = 800;
+const HELLO_ANIM_MS = 1600;
+const HELLO_HOLD_MS = 600;
 
-function HelloSVG({ onDone }: { onDone: () => void }) {
-  const [phase, setPhase] = useState<"draw" | "hold" | "exit">("draw");
+function HelloIntro({ onDone }: { onDone: () => void }) {
+  const [phase, setPhase] = useState<"reveal" | "hold" | "exit">("reveal");
 
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase("hold"), HELLO_DRAW_MS);
-    const t2 = setTimeout(() => setPhase("exit"), HELLO_DRAW_MS + HELLO_HOLD_MS);
-    const t3 = setTimeout(onDone, HELLO_DRAW_MS + HELLO_HOLD_MS + 500);
+    const t1 = setTimeout(() => setPhase("hold"), HELLO_ANIM_MS);
+    const t2 = setTimeout(() => setPhase("exit"), HELLO_ANIM_MS + HELLO_HOLD_MS);
+    const t3 = setTimeout(onDone, HELLO_ANIM_MS + HELLO_HOLD_MS + 500);
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, [onDone]);
 
@@ -29,76 +29,74 @@ function HelloSVG({ onDone }: { onDone: () => void }) {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: "#ffffff",
+        background: "var(--bg-1, #060608)",
         opacity: phase === "exit" ? 0 : 1,
-        transition: "opacity 0.45s cubic-bezier(0.4,0,0.2,1)",
+        transition: "opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
         pointerEvents: phase === "exit" ? "none" : "auto",
       }}
     >
       <style>{`
-        .hello-svg path {
-          fill: none;
-          stroke: #111111;
-          stroke-width: 3;
-          stroke-linecap: round;
-          stroke-linejoin: round;
-          stroke-dasharray: var(--path-len);
-          stroke-dashoffset: var(--path-len);
+        .hello-text {
+          font-family: 'Caveat', cursive;
+          font-weight: 500;
+          font-size: clamp(48px, 10vw, 96px);
+          color: var(--accent-warm, #c9a96e);
+          letter-spacing: 0.06em;
+          line-height: 1;
+          position: relative;
+          overflow: hidden;
         }
-        .hello-svg.draw path {
-          animation: helloStroke var(--draw-dur, ${HELLO_DRAW_MS}ms) var(--draw-delay, 0ms) cubic-bezier(0.4,0,0.2,1) forwards;
+        .hello-text-inner {
+          display: inline-block;
+          transform: translateY(12px);
+          opacity: 0;
         }
-        .hello-svg.hold path {
-          stroke-dashoffset: 0;
+        .hello-text.reveal .hello-text-inner {
+          animation: helloReveal ${HELLO_ANIM_MS}ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
-        .hello-svg.exit path {
-          stroke-dashoffset: calc(-1 * var(--path-len));
-          transition: stroke-dashoffset 0.4s cubic-bezier(0.4,0,0.8,0.2);
+        .hello-text.hold .hello-text-inner {
+          transform: translateY(0);
+          opacity: 1;
         }
-        @keyframes helloStroke {
-          to { stroke-dashoffset: 0; }
+        .hello-text.exit .hello-text-inner {
+          animation: helloExit 0.45s cubic-bezier(0.4, 0, 0.8, 0.2) forwards;
+        }
+        @keyframes helloReveal {
+          0% {
+            opacity: 0;
+            transform: translateY(12px);
+            filter: blur(4px);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0);
+            filter: blur(0);
+          }
+        }
+        @keyframes helloExit {
+          0% {
+            opacity: 1;
+            transform: translateY(0);
+            filter: blur(0);
+          }
+          100% {
+            opacity: 0;
+            transform: translateY(-8px);
+            filter: blur(3px);
+          }
         }
         @media (prefers-reduced-motion: reduce) {
-          .hello-svg path {
-            stroke-dashoffset: 0 !important;
+          .hello-text-inner {
+            opacity: 1;
+            transform: none;
+            filter: none;
             animation: none !important;
           }
         }
       `}</style>
-      <svg
-        className={`hello-svg ${phase}`}
-        viewBox="0 0 260 100"
-        width="clamp(160px, 40vw, 280px)"
-        height="auto"
-        aria-label="hello"
-        role="img"
-      >
-        {/* h */}
-        <path
-          d="M 20 80 L 20 20 C 20 14, 24 10, 30 10 C 36 10, 40 14, 40 20 L 40 46"
-          style={{ "--path-len": 120, "--draw-dur": "220ms", "--draw-delay": "0ms" } as React.CSSProperties}
-        />
-        {/* e */}
-        <path
-          d="M 48 42 C 48 42, 68 38, 68 50 C 68 62, 48 60, 48 48"
-          style={{ "--path-len": 80, "--draw-dur": "200ms", "--draw-delay": "200ms" } as React.CSSProperties}
-        />
-        {/* l */}
-        <path
-          d="M 82 80 L 82 14"
-          style={{ "--path-len": 66, "--draw-dur": "140ms", "--draw-delay": "380ms" } as React.CSSProperties}
-        />
-        {/* l */}
-        <path
-          d="M 100 80 L 100 14"
-          style={{ "--path-len": 66, "--draw-dur": "140ms", "--draw-delay": "500ms" } as React.CSSProperties}
-        />
-        {/* o */}
-        <path
-          d="M 128 48 C 128 32, 118 32, 118 48 C 118 64, 128 64, 128 48"
-          style={{ "--path-len": 80, "--draw-dur": "260ms", "--draw-delay": "620ms" } as React.CSSProperties}
-        />
-      </svg>
+      <span className={`hello-text ${phase}`} role="img" aria-label="hello">
+        <span className="hello-text-inner">hello</span>
+      </span>
     </div>
   );
 }
@@ -248,14 +246,14 @@ export function HeroLoaderWrapper({
 
   if (!hydrated) {
     return (
-      <div style={{ position: "fixed", inset: 0, zIndex: 10000, background: "#ffffff" }} />
+      <div style={{ position: "fixed", inset: 0, zIndex: 10000, background: "#060608" }} />
     );
   }
 
   return (
     <>
       {!helloDone && (
-        <HelloSVG onDone={handleHelloDone} />
+        <HelloIntro onDone={handleHelloDone} />
       )}
       {showLoader && helloDone && (
         <HeroLoaderOverlay progress={progress} />
