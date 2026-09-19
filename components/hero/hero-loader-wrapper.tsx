@@ -179,7 +179,6 @@ export function HeroLoaderWrapper({
   const [showLoader, setShowLoader] = useState(true);
   const [ready, setReady] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
   const [helloDone, setHelloDone] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>(null);
@@ -187,7 +186,6 @@ export function HeroLoaderWrapper({
   useEffect(() => {
     const mq = window.matchMedia?.("(prefers-reduced-motion: reduce)");
     setReducedMotion(mq?.matches ?? false);
-    setIsMobile(window.innerWidth < 768);
     setHydrated(true);
   }, []);
 
@@ -221,7 +219,7 @@ export function HeroLoaderWrapper({
 
   const handleHelloDone = useCallback(() => setHelloDone(true), []);
 
-  const lockBody = (isMobile && !reducedMotion && !helloDone) || (showLoader && !reducedMotion);
+  const lockBody = !reducedMotion && (!helloDone || showLoader);
   const prevLockRef = useRef(false);
 
   useEffect(() => {
@@ -250,16 +248,16 @@ export function HeroLoaderWrapper({
 
   if (!hydrated) {
     return (
-      <div style={{ position: "fixed", inset: 0, zIndex: 10000, background: "#0a0a0a" }} />
+      <div style={{ position: "fixed", inset: 0, zIndex: 10000, background: "#ffffff" }} />
     );
   }
 
   return (
     <>
-      {isMobile && !helloDone && (
+      {!helloDone && (
         <HelloSVG onDone={handleHelloDone} />
       )}
-      {showLoader && (helloDone || !isMobile) && (
+      {showLoader && helloDone && (
         <HeroLoaderOverlay progress={progress} />
       )}
       <div
