@@ -299,6 +299,8 @@ export default function CaseStudyContent({
                     <img
                       src={imgUrl}
                       alt={`${project.title} gallery image ${index + 1}`}
+                      width={800}
+                      height={450}
                       loading="lazy"
                       decoding="async"
                     />

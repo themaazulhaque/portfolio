@@ -12,7 +12,6 @@ export const viewport: Viewport = {
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getPublicSettings();
-  const socialLinks = await getPublicSocialLinks();
 
   const name = settings.name || "Maazul Haque";
   const title = settings.seoTitle || `${name} — Software Developer & Full-Stack Engineer | React, Next.js, Node.js`;
@@ -21,10 +20,6 @@ export async function generateMetadata(): Promise<Metadata> {
     `${name} is a software developer and full-stack engineer based in Delhi, India. Specializing in React, Next.js, React Native, Node.js, and Python. View projects, case studies, and experience.`;
 
   const ogImage = settings.ogImageUrl || `${PRODUCTION_URL}/favicon.svg`;
-
-  const sameAs = socialLinks
-    .filter((link) => link.visible && link.url)
-    .map((link) => link.url);
 
   return {
     title,
@@ -70,7 +65,7 @@ export async function generateMetadata(): Promise<Metadata> {
       description,
       ...(ogImage ? { images: [ogImage] } : {}),
     },
-    ...(sameAs.length > 0 ? { other: { "contact-info": settings.email } } : {}),
+    ...(settings.email ? { other: { "contact-info": settings.email } } : {}),
   };
 }
 
@@ -153,6 +148,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
           href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Cinzel:wght@400..700&family=Caveat:wght@400..700&family=Geist:wght@100..900&display=swap"
           rel="stylesheet"
         />
+        <link rel="preload" href="https://fonts.gstatic.com/s/cinzel/v23/8vIU7ww63mVu7gtR-kwKxNvkNOjw-tbnTYrvDE5ZdqU.woff2" as="font" type="font/woff2" crossOrigin="" />
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href={settings.faviconUrl || "/favicon.svg"} />
         <meta name="theme-color" content="#060608" />

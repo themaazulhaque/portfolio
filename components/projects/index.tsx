@@ -252,7 +252,7 @@ export function ProjectsSection({ projects }: ProjectsSectionProps) {
               >
                 <div className="p-media">
                   {(project.coverImage || project.image) ? (
-                    <img src={project.coverImage || project.image} alt={`${project.title} — ${project.cat}`} loading="lazy" />
+                    <img src={project.coverImage || project.image} alt={`${project.title} — ${project.cat}`} width={800} height={450} loading="lazy" decoding="async" />
                   ) : (
                     <div className="p-img-placeholder" aria-hidden="true" />
                   )}

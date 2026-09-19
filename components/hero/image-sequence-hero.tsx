@@ -380,7 +380,7 @@ export function ImageSequenceHero({
             {/* Phase 4: Availability & Conclusion */}
             <div className="hero-phase" style={phase4Style}>
               <span className="text-editorial-tag">{availabilityTag}</span>
-              <h2 className="text-editorial-title text-signature">{displayName}</h2>
+              <p className="text-editorial-title text-signature">{displayName}</p>
               <p className="text-editorial-subtitle">SOFTWARE & AI ENGINEER</p>
             </div>
           </div>

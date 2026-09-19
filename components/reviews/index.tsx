@@ -328,7 +328,7 @@ export function ReviewsSection({ reviews }: ReviewsSectionProps) {
                   >
                     <div className="review-carousel__avatar">
                           {review.image ? (
-                            <img src={review.image} alt={`${review.name} — reviewer`} draggable={false} />
+                            <img src={review.image} alt={`${review.name} — reviewer`} width={80} height={80} loading="lazy" decoding="async" draggable={false} />
                           ) : (
                         <span className="review-carousel__initials">{getInitials(review.name)}</span>
                       )}

@@ -169,7 +169,7 @@ export function StackSection({ tech }: StackSectionProps) {
                   <span className="stack-card__glow" aria-hidden="true" />
                   <div className="stack-card__logo">
                     {t.logo ? (
-                      <img src={t.logo} alt="" loading="lazy" />
+                      <img src={t.logo} alt={`${t.name} logo`} width={32} height={32} loading="lazy" decoding="async" />
                     ) : (
                       <span className="stack-card__fallback" aria-hidden="true">
                         {t.name.charAt(0)}

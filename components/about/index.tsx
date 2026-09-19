@@ -129,7 +129,10 @@ export function AboutSection({ name, location, availability, portrait }: AboutSe
                 <img
                   src={portraitSrc}
                   alt={`${name || "Maazul Haque"} — portrait`}
+                  width={400}
+                  height={500}
                   loading="lazy"
+                  decoding="async"
                 />
               </div>
             </div>

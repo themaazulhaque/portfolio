@@ -6,7 +6,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/admin', '/api', '/health', '/_next'],
+        disallow: ['/admin', '/api', '/health', '/_next', '/favicon.ico'],
       },
     ],
     sitemap: 'https://maazulhaque.qd.je/sitemap.xml',
