@@ -48,6 +48,7 @@ export async function createTech(_prev: ActionState, formData: FormData): Promis
     category: (formData.get('category') as string) || '',
     logo: (formData.get('logo') as string) || '',
     order: parseInt((formData.get('order') as string) ?? '0', 10),
+    featured: formData.get('featured') === 'true',
   };
   const parsed = TechSchema.safeParse(raw);
   if (!parsed.success) return { error: getValidationErrorMessage(parsed.error) };
@@ -73,6 +74,7 @@ export async function updateTech(
     category: (formData.get('category') as string) || '',
     logo: (formData.get('logo') as string) || '',
     order: parseInt((formData.get('order') as string) ?? '0', 10),
+    featured: formData.get('featured') === 'true',
   };
   const parsed = TechSchema.safeParse(raw);
   if (!parsed.success) return { error: getValidationErrorMessage(parsed.error) };

@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { deleteTech } from '@/app/actions/tech';
 
-interface ITech { _id: string; name: string; category: string; logo: string; }
+interface ITech { _id: string; name: string; category: string; logo: string; featured: boolean; }
 
 export function TechTable({ initialItems }: { initialItems: ITech[] }) {
   const [items, setItems] = useState(initialItems);
@@ -24,7 +24,7 @@ export function TechTable({ initialItems }: { initialItems: ITech[] }) {
     <div className="card">
       <div className="table-wrap">
         <table>
-          <thead><tr><th>Logo</th><th>Name</th><th>Category</th><th style={{ textAlign: 'right' }}>Actions</th></tr></thead>
+          <thead><tr><th>Logo</th><th>Name</th><th>Category</th><th>Featured</th><th style={{ textAlign: 'right' }}>Actions</th></tr></thead>
           <tbody>
             {items.map((t) => (
               <tr key={t._id}>
@@ -37,6 +37,7 @@ export function TechTable({ initialItems }: { initialItems: ITech[] }) {
                 </td>
                 <td style={{ fontWeight: 500 }}>{t.name}</td>
                 <td style={{ color: 'var(--text-2)' }}>{t.category || '—'}</td>
+                <td style={{ color: t.featured ? 'var(--primary)' : 'var(--text-3)' }}>{t.featured ? '★' : '—'}</td>
                 <td>
                   <div className="row-actions" style={{ justifyContent: 'flex-end' }}>
                     <Link href={`/admin/dashboard/tech/${t._id}`} className="btn btn-ghost btn-sm">Edit</Link>

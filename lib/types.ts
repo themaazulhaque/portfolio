@@ -46,7 +46,6 @@ export interface PublicProject {
   gallery: string[];
   results: { metric: string; label: string }[];
   additionalLinks?: { label: string; url: string }[];
-  resources?: { type: string; label: string; value: string }[];
   featured: boolean;
 }
 
@@ -129,6 +128,7 @@ export interface PublicTech {
   name: string;
   cat: string;
   logo: string;
+  featured: boolean;
 }
 
 // ==========================================
@@ -217,7 +217,6 @@ export interface AdminProject {
   gallery?: string[];
   results?: { metric: string; label: string }[];
   additionalLinks?: { label: string; url: string }[];
-  resources?: { type: string; label: string; value: string }[];
   featured?: boolean;
   published?: boolean;
   order?: number;

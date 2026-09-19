@@ -10,14 +10,12 @@ import { isCloudinaryConfigured, uploadToCloudinary } from '@/lib/cloudinary';
 import { isValidOrigin } from '@/lib/csrf';
 
 const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads');
-const MAX_SIZE = 50 * 1024 * 1024; // 50 MB — accommodates APKs
+const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
 
 const ALLOWED_TYPES = new Set([
   'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/avif',
   'video/mp4', 'video/webm',
   'application/pdf',
-  'application/vnd.android.package-archive',
-  'application/octet-stream',
   'application/zip',
   'application/x-zip-compressed',
 ]);
@@ -31,7 +29,6 @@ const MIME_TO_EXT: Record<string, string> = {
   'video/mp4': 'mp4',
   'video/webm': 'webm',
   'application/pdf': 'pdf',
-  'application/vnd.android.package-archive': 'apk',
   'application/zip': 'zip',
   'application/x-zip-compressed': 'zip',
 };
@@ -100,7 +97,7 @@ export async function POST(request: NextRequest) {
 
   if (file.size > MAX_SIZE) {
     console.error(`[upload] File too large: ${file.size} bytes`);
-    return NextResponse.json({ error: 'File is too large (max 50 MB)' }, { status: 413 });
+    return NextResponse.json({ error: 'File is too large (max 10 MB)' }, { status: 413 });
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());

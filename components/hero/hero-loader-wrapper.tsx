@@ -6,15 +6,16 @@ import { ScrollTrigger } from "../../lib/gsap";
 
 const TIMEOUT_MS = 12000;
 const FRAMES_BEFORE_READY = 8;
-const HELLO_HOLD_MS = 1200;
+const HELLO_DRAW_MS = 1200;
+const HELLO_HOLD_MS = 800;
 
-function HelloIntro({ onDone }: { onDone: () => void }) {
-  const [phase, setPhase] = useState<"enter" | "hold" | "exit">("enter");
+function HelloSVG({ onDone }: { onDone: () => void }) {
+  const [phase, setPhase] = useState<"draw" | "hold" | "exit">("draw");
 
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase("hold"), 100);
-    const t2 = setTimeout(() => setPhase("exit"), 100 + HELLO_HOLD_MS);
-    const t3 = setTimeout(onDone, 100 + HELLO_HOLD_MS + 600);
+    const t1 = setTimeout(() => setPhase("hold"), HELLO_DRAW_MS);
+    const t2 = setTimeout(() => setPhase("exit"), HELLO_DRAW_MS + HELLO_HOLD_MS);
+    const t3 = setTimeout(onDone, HELLO_DRAW_MS + HELLO_HOLD_MS + 500);
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, [onDone]);
 
@@ -28,37 +29,76 @@ function HelloIntro({ onDone }: { onDone: () => void }) {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: "#0a0a0a",
+        background: "#ffffff",
         opacity: phase === "exit" ? 0 : 1,
-        transition: "opacity 0.5s cubic-bezier(0.4,0,0.2,1)",
+        transition: "opacity 0.45s cubic-bezier(0.4,0,0.2,1)",
         pointerEvents: phase === "exit" ? "none" : "auto",
       }}
     >
       <style>{`
-        @keyframes helloFadeIn {
-          from { opacity: 0; transform: translateY(8px) scale(0.97); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
+        .hello-svg path {
+          fill: none;
+          stroke: #111111;
+          stroke-width: 3;
+          stroke-linecap: round;
+          stroke-linejoin: round;
+          stroke-dasharray: var(--path-len);
+          stroke-dashoffset: var(--path-len);
+        }
+        .hello-svg.draw path {
+          animation: helloStroke var(--draw-dur, ${HELLO_DRAW_MS}ms) var(--draw-delay, 0ms) cubic-bezier(0.4,0,0.2,1) forwards;
+        }
+        .hello-svg.hold path {
+          stroke-dashoffset: 0;
+        }
+        .hello-svg.exit path {
+          stroke-dashoffset: calc(-1 * var(--path-len));
+          transition: stroke-dashoffset 0.4s cubic-bezier(0.4,0,0.8,0.2);
+        }
+        @keyframes helloStroke {
+          to { stroke-dashoffset: 0; }
         }
         @media (prefers-reduced-motion: reduce) {
-          @keyframes helloFadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+          .hello-svg path {
+            stroke-dashoffset: 0 !important;
+            animation: none !important;
           }
         }
       `}</style>
-      <span
-        style={{
-          fontFamily: '"Cinzel", "Georgia", serif',
-          fontSize: "clamp(36px, 8vw, 64px)",
-          fontWeight: 400,
-          letterSpacing: "0.18em",
-          color: "#ffffff",
-          animation: "helloFadeIn 0.5s cubic-bezier(0.16,1,0.3,1) both",
-          userSelect: "none",
-        }}
+      <svg
+        className={`hello-svg ${phase}`}
+        viewBox="0 0 260 100"
+        width="clamp(160px, 40vw, 280px)"
+        height="auto"
+        aria-label="hello"
+        role="img"
       >
-        HELLO
-      </span>
+        {/* h */}
+        <path
+          d="M 20 80 L 20 20 C 20 14, 24 10, 30 10 C 36 10, 40 14, 40 20 L 40 46"
+          style={{ "--path-len": 120, "--draw-dur": "220ms", "--draw-delay": "0ms" } as React.CSSProperties}
+        />
+        {/* e */}
+        <path
+          d="M 48 42 C 48 42, 68 38, 68 50 C 68 62, 48 60, 48 48"
+          style={{ "--path-len": 80, "--draw-dur": "200ms", "--draw-delay": "200ms" } as React.CSSProperties}
+        />
+        {/* l */}
+        <path
+          d="M 82 80 L 82 14"
+          style={{ "--path-len": 66, "--draw-dur": "140ms", "--draw-delay": "380ms" } as React.CSSProperties}
+        />
+        {/* l */}
+        <path
+          d="M 100 80 L 100 14"
+          style={{ "--path-len": 66, "--draw-dur": "140ms", "--draw-delay": "500ms" } as React.CSSProperties}
+        />
+        {/* o */}
+        <path
+          d="M 128 48 C 128 32, 118 32, 118 48 C 118 64, 128 64, 128 48"
+          style={{ "--path-len": 80, "--draw-dur": "260ms", "--draw-delay": "620ms" } as React.CSSProperties}
+        />
+      </svg>
     </div>
   );
 }
@@ -207,7 +247,7 @@ export function HeroLoaderWrapper({
   return (
     <>
       {isMobile && !helloDone && (
-        <HelloIntro onDone={() => setHelloDone(true)} />
+        <HelloSVG onDone={() => setHelloDone(true)} />
       )}
       {showLoader && (helloDone || !isMobile) && (
         <HeroLoaderOverlay progress={progress} />

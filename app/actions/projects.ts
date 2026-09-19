@@ -198,7 +198,6 @@ function buildProjectRaw(formData: FormData): ProjectInput {
     gallery: parseJsonField(formData, 'gallery', []),
     results: parseJsonField(formData, 'results', []),
     additionalLinks: parseJsonField(formData, 'additionalLinks', []),
-    resources: parseJsonField(formData, 'resources', []),
     featured: formData.get('featured') === 'true',
     published: formData.get('published') === 'true',
     order: parseInt((formData.get('order') as string) || '0', 10),

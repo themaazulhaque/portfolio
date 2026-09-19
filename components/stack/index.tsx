@@ -69,7 +69,12 @@ export function StackSection({ tech }: StackSectionProps) {
   const gridRef = useRef<HTMLDivElement | null>(null);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [expanded, setExpanded] = useState(false);
   const rafRef = useRef<number>(0);
+
+  const featured = tech.filter((t) => t.featured);
+  const allTech = expanded ? tech : featured.length > 0 ? featured : tech;
+  const hasMore = featured.length > 0 && featured.length < tech.length && !expanded;
 
   const handleMouseMove = useCallback((e: React.MouseEvent, idx: number) => {
     const element = e.currentTarget as HTMLElement;
@@ -115,7 +120,7 @@ export function StackSection({ tech }: StackSectionProps) {
     }, section);
 
     return () => ctx.revert();
-  }, []);
+  }, [expanded]);
 
   function getCardClass(idx: number): string {
     if (hoveredIdx === null) return "stack-card";
@@ -146,7 +151,7 @@ export function StackSection({ tech }: StackSectionProps) {
       <div className="container">
         <div className="stack-perspective" ref={gridRef}>
           <div className="stack-row">
-            {tech.map((t, i) => {
+            {allTech.map((t, i) => {
               const color = getBrandColor(t.name);
               return (
                 <button
@@ -154,7 +159,7 @@ export function StackSection({ tech }: StackSectionProps) {
                   className={getCardClass(i)}
                   data-tilt
                   type="button"
-                  aria-label={`${t.name}${t.cat ? ` — ${t.cat}` : ""}`}
+                  aria-label={`${t.name}${t.cat ? ` — ${t.cat}` : ""}${t.featured ? " (featured)" : ""}`}
                   style={{ "--tech-color": color } as React.CSSProperties}
                   onMouseMove={(e) => handleMouseMove(e, i)}
                   onMouseLeave={handleMouseLeave}
@@ -173,11 +178,67 @@ export function StackSection({ tech }: StackSectionProps) {
                   </div>
                   <span className="stack-card__name">{t.name}</span>
                   {t.cat && <span className="stack-card__cat">{t.cat}</span>}
+                  {t.featured && <span className="stack-card__star" aria-hidden="true">★</span>}
                 </button>
               );
             })}
           </div>
         </div>
+
+        {hasMore && (
+          <div style={{ textAlign: "center", marginTop: 32 }}>
+            <button
+              type="button"
+              onClick={() => setExpanded(true)}
+              style={{
+                background: "none",
+                border: "1px solid rgba(255,255,255,0.15)",
+                color: "rgba(255,255,255,0.5)",
+                padding: "10px 28px",
+                borderRadius: 999,
+                fontSize: 13,
+                letterSpacing: "0.08em",
+                cursor: "pointer",
+                fontFamily: "inherit",
+                transition: "all 0.25s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = "rgba(255,255,255,0.4)";
+                e.currentTarget.style.color = "rgba(255,255,255,0.8)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)";
+                e.currentTarget.style.color = "rgba(255,255,255,0.5)";
+              }}
+            >
+              View All {tech.length} Tools
+            </button>
+          </div>
+        )}
+
+        {expanded && featured.length > 0 && (
+          <div style={{ textAlign: "center", marginTop: 16 }}>
+            <button
+              type="button"
+              onClick={() => setExpanded(false)}
+              style={{
+                background: "none",
+                border: "none",
+                color: "rgba(255,255,255,0.35)",
+                padding: "6px 16px",
+                fontSize: 12,
+                letterSpacing: "0.06em",
+                cursor: "pointer",
+                fontFamily: "inherit",
+                transition: "color 0.2s ease",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.6)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.35)"; }}
+            >
+              Show Featured Only
+            </button>
+          </div>
+        )}
 
         {hoveredIdx !== null && (
           <div
@@ -188,7 +249,7 @@ export function StackSection({ tech }: StackSectionProps) {
               top: tooltipPos.y,
             }}
           >
-            {tech[hoveredIdx]?.name}
+            {allTech[hoveredIdx]?.name}
           </div>
         )}
       </div>

@@ -3,12 +3,6 @@ export interface SanitizedLink {
   href: string;
 }
 
-export interface SanitizedResource {
-  type: string;
-  label: string;
-  value: string;
-}
-
 export interface SanitizedResult {
   metric: string;
   label: string;
@@ -123,68 +117,4 @@ export function buildCaseStudyLinks(input: {
   ]);
 }
 
-/**
- * Build the unified resource list for a case study.
- * Merges new `resources` array with legacy dedicated URL fields and `additionalLinks`.
- * New resources take priority; legacy fields are appended if not already covered.
- */
-export function buildCaseStudyResources(input: {
-  liveUrl?: string | null;
-  githubUrl?: string;
-  repository?: string;
-  documentationUrl?: string;
-  figmaUrl?: string;
-  casePdfUrl?: string;
-  videoUrl?: string;
-  demoCredentials?: string;
-  clientWebsite?: string;
-  additionalLinks?: Array<{ label?: string | null; url?: string | null } | null | undefined>;
-  resources?: Array<{ type?: string | null; label?: string | null; value?: string | null } | null | undefined>;
-}): SanitizedResource[] {
-  const result: SanitizedResource[] = [];
 
-  // New-format resources first
-  if (Array.isArray(input.resources)) {
-    for (const r of input.resources) {
-      if (!r || typeof r !== 'object') continue;
-      const type = cleanString(r.type) || 'link';
-      const label = cleanString(r.label);
-      const value = cleanString(r.value);
-      if (label && value) {
-        result.push({ type, label, value });
-      }
-    }
-  }
-
-  // If new resources exist, skip legacy fields (new system fully replaces old)
-  if (result.length > 0) return result;
-
-  // Legacy fallback: build from dedicated URL fields + additionalLinks
-  const legacyMap: Array<{ type: string; label: string; value: string } | null> = [
-    isNonEmptyString(input.liveUrl) ? { type: 'link', label: 'Live Demo', value: input.liveUrl!.trim() } : null,
-    isNonEmptyString(input.clientWebsite) ? { type: 'link', label: 'Client Website', value: input.clientWebsite!.trim() } : null,
-    isNonEmptyString(input.githubUrl) ? { type: 'github', label: 'GitHub Repository', value: input.githubUrl!.trim() } : null,
-    isNonEmptyString(input.repository) ? { type: 'link', label: 'Repository', value: input.repository!.trim() } : null,
-    isNonEmptyString(input.documentationUrl) ? { type: 'link', label: 'Documentation', value: input.documentationUrl!.trim() } : null,
-    isNonEmptyString(input.figmaUrl) ? { type: 'figma', label: 'Figma Design System', value: input.figmaUrl!.trim() } : null,
-    isNonEmptyString(input.casePdfUrl) ? { type: 'pdf', label: 'Case Study PDF', value: input.casePdfUrl!.trim() } : null,
-    isNonEmptyString(input.videoUrl) ? { type: 'video', label: 'Demo Video', value: input.videoUrl!.trim() } : null,
-  ];
-
-  for (const item of legacyMap) {
-    if (item) result.push(item);
-  }
-
-  if (Array.isArray(input.additionalLinks)) {
-    for (const link of input.additionalLinks) {
-      if (!link || typeof link !== 'object') continue;
-      const label = cleanString(link.label);
-      const value = cleanString(link.url);
-      if (label && value) {
-        result.push({ type: 'link', label, value });
-      }
-    }
-  }
-
-  return result;
-}

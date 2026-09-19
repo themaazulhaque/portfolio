@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createTech, updateTech } from '@/app/actions/tech';
 
-interface ITech { name?: string; category?: string; logo?: string; order?: number; }
+interface ITech { name?: string; category?: string; logo?: string; order?: number; featured?: boolean; }
 interface Props { item?: ITech; itemId?: string; }
 const init = {};
 
@@ -33,6 +33,16 @@ export function TechForm({ item, itemId }: Props) {
             <div className="field"><label>Logo (URL)</label><input name="logo" defaultValue={item?.logo} placeholder="/logos/react.svg" /></div>
             <div className="field" style={{ maxWidth: 150 }}><label>Order</label><input type="number" name="order" defaultValue={item?.order ?? 0} min={0} /></div>
           </div>
+        </div>
+      </div>
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div className="card-header"><span className="card-title">Visibility</span></div>
+        <div className="card-body" style={{ display: 'flex', gap: 24 }}>
+          <label className="toggle">
+            <input type="checkbox" name="featured" value="true" defaultChecked={item?.featured ?? false} />
+            <span className="toggle-track" />
+            <span style={{ fontSize: 13 }}>Featured</span>
+          </label>
         </div>
       </div>
       <div style={{ display: 'flex', gap: 10 }}>

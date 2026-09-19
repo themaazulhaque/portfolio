@@ -114,15 +114,6 @@ export const getPublicProjects = cache(async (): Promise<PublicProject[]> => {
         gallery: cleanStringArray(plain.gallery),
         results: cleanResults(plain.results),
         additionalLinks: cleanLinks(plain.additionalLinks),
-        resources: Array.isArray(plain.resources) ? plain.resources
-          .filter((r): r is { type: string; label: string; value: string } => 
-            r !== null && typeof r === 'object' && typeof (r as Record<string, unknown>).label === 'string' && typeof (r as Record<string, unknown>).value === 'string'
-          )
-          .map((r) => ({
-            type: String(r.type || 'link'),
-            label: String(r.label),
-            value: String(r.value),
-          })) : [],
         featured: plain.featured === true,
         published: plain.published !== false,
       };
@@ -276,7 +267,7 @@ export const getPublicServices = cache(async (): Promise<PublicService[]> => {
 export const getPublicTech = cache(async (): Promise<PublicTech[]> => {
   try {
     await connectDB();
-    const items = await Tech.find().sort({ order: 1 }).lean();
+      const items = await Tech.find().sort({ order: 1 }).lean();
     return items.map((doc) => {
       const plain = JSON.parse(JSON.stringify(doc)) as Record<string, unknown>;
       return {
@@ -284,6 +275,7 @@ export const getPublicTech = cache(async (): Promise<PublicTech[]> => {
         name: String(plain.name ?? ''),
         cat: String(plain.category ?? ''),
         logo: typeof plain.logo === 'string' && plain.logo ? plain.logo : '',
+        featured: Boolean(plain.featured),
       };
     });
   } catch {

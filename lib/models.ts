@@ -59,7 +59,6 @@ export interface IProject {
   gallery: string[];
   results: { metric: string; label: string }[];
   additionalLinks?: { label: string; url: string }[];
-  resources?: { type: string; label: string; value: string }[];
   featured: boolean;
   published: boolean;
   order: number;
@@ -70,8 +69,6 @@ export interface IProject {
 const ProcessStepSchema = new Schema({ step: String, title: String, desc: String }, { _id: false });
 const ResultSchema = new Schema({ metric: String, label: String }, { _id: false });
 const AdditionalLinkSchema = new Schema({ label: String, url: String }, { _id: false });
-const ResourceSchema = new Schema({ type: String, label: String, value: String }, { _id: false });
-
 const ProjectSchema = new Schema<IProject>(
   {
     num: { type: String, required: true },
@@ -109,7 +106,6 @@ const ProjectSchema = new Schema<IProject>(
     gallery: { type: [String], default: [] },
     results: { type: [ResultSchema], default: [] },
     additionalLinks: { type: [AdditionalLinkSchema], default: [] },
-    resources: { type: [ResourceSchema], default: [] },
     featured: { type: Boolean, default: false },
     published: { type: Boolean, default: true },
     order: { type: Number, default: 0 },
@@ -159,6 +155,7 @@ export interface ITech {
   category: string;
   logo: string;
   order: number;
+  featured: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -169,6 +166,7 @@ const TechSchema = new Schema<ITech>(
     category: { type: String, default: '' },
     logo: { type: String, default: '' },
     order: { type: Number, default: 0 },
+    featured: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
